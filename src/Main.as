@@ -43,6 +43,8 @@ package
         private var fr:FileReference;
         private var ff:FileFilter;
         
+        private var tf:TextField;
+        
         public function Main():void 
         {
             if (stage) init();
@@ -70,45 +72,88 @@ package
             fr.addEventListener(Event.SELECT, onFileSelected);
             ff = new FileFilter("Organya files", "*.org;org.*");
             
-            var playButton:SimpleButton = new SimpleButton();
-            playButton.upState = makeButton(0xDDDDDD, 100, 20, 10, "LOAD");
-            playButton.overState = makeButton(0xEEEEEE, 100, 20, 10, "LOAD");
-            playButton.downState = makeButton(0xCCCCCC, 100, 20, 10, "LOAD");
-            playButton.hitTestState = playButton.upState;
-            playButton.addEventListener(MouseEvent.MOUSE_DOWN, onClickButtan);
-            playButton.x = (stage.stageWidth - playButton.width) / 2;
-            playButton.y = (stage.stageHeight - playButton.height) / 2;
+            var playButton:SimpleButton = makeButton(75, 20, 10, "LOAD", onClickLoadButtan);
+            playButton.x = (stage.stageWidth - playButton.width) / 8*1;
+            playButton.y = (stage.stageHeight - playButton.height) / 4*3;
             addChild(playButton);
+            
+            var loadButton:SimpleButton = makeButton(75, 20, 10, "PLAY", onClickPlayButtan);
+            loadButton.x = (stage.stageWidth - playButton.width) / 8*7;
+            loadButton.y = (stage.stageHeight - playButton.height) / 4*3;
+            addChild(loadButton);
+            
+            tf = makeTextField("");
+            tf.x = stage.stageWidth / 2;
+            tf.y = stage.stageHeight  / 8;
+            addChild(tf);
         }
         
-        private function makeButton(color:uint, width:int, height:int, round:int, text:String):Sprite
+        private function makeButton(width:int, height:int, round:int, text:String, callback:Function):SimpleButton
+        {
+            var makeButt:Function = function(color:uint, width:int, height:int, round:int, text:String):Sprite {
+                var t:TextField = new TextField();
+                var s:Sprite = new Sprite();
+                
+                s.graphics.lineStyle(2);
+                s.graphics.beginFill(color);
+                s.graphics.drawRoundRect(0, 0, width, height, round);
+                s.graphics.endFill();
+                
+                t.text = text;
+                t.selectable = false;
+                t.width = width;
+                t.autoSize = TextFieldAutoSize.CENTER;
+                s.addChild(t);
+                return s;
+            }
+            
+            var buttan:SimpleButton = new SimpleButton();
+            buttan.upState   = makeButt(0xDDDDDD, width, height, round, text);
+            buttan.overState = makeButt(0xEEEEEE, width, height, round, text);
+            buttan.downState = makeButt(0xCCCCCC, width, height, round, text);
+            buttan.hitTestState = buttan.upState;
+            buttan.addEventListener(MouseEvent.MOUSE_DOWN, callback);
+            return buttan;
+            
+        }
+        
+        private function makeTextField(text:String):TextField
         {
             var t:TextField = new TextField();
-            var s:Sprite = new Sprite();
-            s.graphics.lineStyle(2);
-            s.graphics.beginFill(color);
-            s.graphics.drawRoundRect(0, 0, width, height, round);
-            s.graphics.endFill();
             
             t.text = text;
             t.selectable = false;
             t.width = width;
             t.autoSize = TextFieldAutoSize.CENTER;
-            s.addChild(t);
-            return s;
+            return t;
         }
         
-        private function onClickButtan(e:MouseEvent):void{
+        private function onClickLoadButtan(e:MouseEvent):void{
             fr.browse([ff]);
+        }
+        
+        private function onClickPlayButtan(e:MouseEvent):void{
+            if(sc) {
+                sc.stop();
+                sc = null;
+            }
+            else if(replayer){
+                sc = audio_out.play();
+            }
+            
         }
         
         private function onFileSelected(evt:Event):void{ 
 
-            var ass:Function = function(event:Event) {
-                if(sc) sc.stop();
+            var ass:Function = function(event:Event):void {
+                if(sc) {
+                    sc.stop();
+                    sc = null;
+                }
                 replayer = new Organya( fr.data,
                                         new smp_data() as ByteArray);
                 sc = audio_out.play();
+                tf.text=fr.name;
             }
                 
             fr.addEventListener(Event.COMPLETE, ass); 
