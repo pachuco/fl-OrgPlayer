@@ -9,4 +9,4 @@ Both Org-02 and Org-03 supported.
 
 
 Current state:
-Functional and accurate, better than liborganya. Ungodly code mess.
+Functional, more accurate than liborganya. Ungodly code mess.
