@@ -19,9 +19,11 @@ TODO:
  
  *Clean up the code. Lots of things here.
  
- *Replace WoC's bank format with own, better one.
+ *Replace WoC's samplebank format with own, better one.
+ 
+ *Deal with drumsample mapping(Xerxes vs original OrgMaker v2 mapping) and 'Cave Story' mode.
  
  *Synthesize instruments from PXTs.
  
- *Port this to C, where it's actually useful.
+ *Port this back to C, where it's actually useful.
  
