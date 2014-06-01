@@ -72,12 +72,12 @@ package
             fr.addEventListener(Event.SELECT, onFileSelected);
             ff = new FileFilter("Organya files", "*.org;org.*");
             
-            var playButton:SimpleButton = makeButton(75, 20, 10, "LOAD", onClickLoadButtan);
+            var playButton:SimpleButton = makeButton("LOAD", onClickLoadButtan);
             playButton.x = (stage.stageWidth - playButton.width) / 8*1;
             playButton.y = (stage.stageHeight - playButton.height) / 4*3;
             addChild(playButton);
             
-            var loadButton:SimpleButton = makeButton(75, 20, 10, "PLAY", onClickPlayButtan);
+            var loadButton:SimpleButton = makeButton("PLAY", onClickPlayButtan);
             loadButton.x = (stage.stageWidth - playButton.width) / 8*7;
             loadButton.y = (stage.stageHeight - playButton.height) / 4*3;
             addChild(loadButton);
@@ -88,9 +88,9 @@ package
             addChild(tf);
         }
         
-        private function makeButton(width:int, height:int, round:int, text:String, callback:Function):SimpleButton
+        private function makeButton(text:String, callback:Function, width:int=75, height:int=20, round:int=10):SimpleButton
         {
-            var makeButt:Function = function(color:uint, width:int, height:int, round:int, text:String):Sprite {
+            var makeButt:Function = function(text:String, color:uint, width:int, height:int, round:int):Sprite {
                 var t:TextField = new TextField();
                 var s:Sprite = new Sprite();
                 
@@ -108,9 +108,9 @@ package
             }
             
             var buttan:SimpleButton = new SimpleButton();
-            buttan.upState   = makeButt(0xDDDDDD, width, height, round, text);
-            buttan.overState = makeButt(0xEEEEEE, width, height, round, text);
-            buttan.downState = makeButt(0xCCCCCC, width, height, round, text);
+            buttan.upState   = makeButt(text, 0xDDDDDD, width, height, round);
+            buttan.overState = makeButt(text, 0xEEEEEE, width, height, round);
+            buttan.downState = makeButt(text, 0xCCCCCC, width, height, round);
             buttan.hitTestState = buttan.upState;
             buttan.addEventListener(MouseEvent.MOUSE_DOWN, callback);
             return buttan;
