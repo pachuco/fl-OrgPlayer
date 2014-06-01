@@ -58,6 +58,7 @@ package
             
             audio_out = new Sound();
             audio_out.addEventListener(SampleDataEvent.SAMPLE_DATA, audio_loop);
+            replayer = new Organya( new smp_data() as ByteArray);
             
             
             
@@ -137,7 +138,7 @@ package
                 sc.stop();
                 sc = null;
             }
-            else if(replayer){
+            else if(replayer.isSongLoaded){
                 sc = audio_out.play();
             }
             
@@ -150,8 +151,7 @@ package
                     sc.stop();
                     sc = null;
                 }
-                replayer = new Organya( fr.data,
-                                        new smp_data() as ByteArray);
+                replayer.loadSong(fr.data);
                 sc = audio_out.play();
                 tf.text=fr.name;
             }

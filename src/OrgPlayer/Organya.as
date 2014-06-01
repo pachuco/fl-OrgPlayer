@@ -7,8 +7,9 @@ package OrgPlayer{
      */
     public class Organya{
         
+        public var isSongLoaded:Boolean = false;
         
-        public var
+        private var
             melody          :Vector.<ByteArray>,
             drums           :Vector.<ByteArray>,
             
@@ -72,22 +73,12 @@ package OrgPlayer{
             makeEven    = new Vector.<Boolean>( 8 , true );
         }
         
-        //this code loads the data from the org file
-        public function Organya(orgStream:ByteArray, resStream:ByteArray){
+        public function Organya(resStream:ByteArray){
             
             melody      = new Vector.<ByteArray>;
             drums       = new Vector.<ByteArray>;
-            sample      = 0;
-            click       = 0;
-            data        = new Vector.<Vector.<int>>;
-            pi          = new Vector.<Boolean>( 16, true );
-            freqoff     = new Vector.<Number> ( 16, true );
-            reset();
             
-            //lots of headaches saved here
-            orgStream.position=0;
             resStream.position=0;
-            orgStream.endian = Endian.LITTLE_ENDIAN;
             resStream.endian = Endian.LITTLE_ENDIAN;
             //---------------------------------------------
             frameLen=1.0/sampleRate;
@@ -95,7 +86,7 @@ package OrgPlayer{
             //read sample data in from the resource file
             var mqty:int=resStream.readUnsignedByte();
             var mlen:int=0;
-            var i:int, j:int, k:int;
+            var i:int, j:int;
             
             for(i=0;i<3;i++){mlen*=256;mlen+=resStream.readUnsignedByte()}
             
@@ -122,6 +113,19 @@ package OrgPlayer{
             }
             //resStream.close();
             resStream.position=0;
+        }
+        
+        public function loadSong(orgStream:ByteArray):void{
+            var i:int, j:int, k:int;
+            sample      = 0;
+            click       = 0;
+            data        = new Vector.<Vector.<int>>;
+            pi          = new Vector.<Boolean>( 16, true );
+            freqoff     = new Vector.<Number> ( 16, true );
+            reset();
+            
+            orgStream.position=0;
+            orgStream.endian = Endian.LITTLE_ENDIAN;
             
             //ignore the first 6 bytes of the org file
             //TODO: DON'T IGNORE THE HEADER!
@@ -214,8 +218,8 @@ package OrgPlayer{
             }
             //orgStream.close();
             orgStream.position=0;
+            isSongLoaded = true;
         }
-        
         
         public function getSampleHunk(outBuf:ByteArray, numSamples:int):void{
             outBuf.endian = Endian.LITTLE_ENDIAN;
@@ -304,6 +308,21 @@ package OrgPlayer{
                 outBuf.writeFloat(lsamp/0xFFFF);
             }
         }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         //ASS section below
         private function _newMelody(outer:int, inner:int):Vector.<ByteArray>{
