@@ -6,6 +6,8 @@ package OrgPlayer{
      * @author me
      */
     public class Organya{
+        
+        
         public var
             melody          :Vector.<ByteArray>,
             drums           :Vector.<ByteArray>,
@@ -259,16 +261,16 @@ package OrgPlayer{
                     }
                 }
                 
-                var lsamp:Number=0.0, rsamp:Number=0.0;
+                var lsamp:int=0, rsamp:int=0;
                 for(j=0;j<16;j++){
                     if(tactive[j]){
                         var ins:int=instruments[j];
-                        var samp1:Number,samp2:Number,pos:Number=tpos[j];
+                        var samp1:int,samp2:int,pos:Number=tpos[j];
                         var pos1:int, pos2:int
                         if(j<8){
                             var size:int=pointqty[j];
                             pos*=size;
-                            pos1=int(pos);
+                            pos1=uint(pos);
                             pos-=pos1;
                             pos2=pos1+1;
                             if(pos2==size) pos2=0;
@@ -276,7 +278,7 @@ package OrgPlayer{
                             samp1=sign(melody[ins][uint((pos1*256)/size)]);
                             samp2=sign(melody[ins][uint((pos2*256)/size)]);
                         }else{
-                            pos1=int(pos);
+                            pos1=uint(pos);
                             pos-=pos1;
                             var drum:ByteArray=drums[ins];
                             samp1=sign(drum[pos1++]);
@@ -284,7 +286,7 @@ package OrgPlayer{
                         }
                         
                         //do interpolation
-                        var samp:Number=samp1+pos*(samp2-samp1);
+                        var samp:Number=(samp1+pos*(samp2-samp1));
                         
                         //multiply the sample frame by the left and right volume, and add it to the output
                         lsamp+=lvol[j]*samp;
