@@ -10,6 +10,8 @@ package OrgPlayer{
         public var isSongLoaded:Boolean = false;
         
         private var
+            orgVersion      :uint,
+            
             melody          :Vector.<ByteArray>,
             drums           :Vector.<ByteArray>,
             
@@ -115,7 +117,17 @@ package OrgPlayer{
             resStream.position=0;
         }
         
-        public function loadSong(orgStream:ByteArray):void{
+        public function loadSong(orgStream:ByteArray):Boolean{
+            orgStream.position=0;
+            orgStream.endian = Endian.LITTLE_ENDIAN;
+            
+            //check the first 6 bytes of the org file
+            var header:String = orgStream.readMultiByte(6, "us-ascii");
+            trace(header);
+            if      (header == "Org-02") orgVersion=2
+            else if (header == "Org-03") orgVersion=3
+            else    return false;
+            
             var i:int, j:int, k:int;
             sample      = 0;
             click       = 0;
@@ -123,14 +135,6 @@ package OrgPlayer{
             pi          = new Vector.<Boolean>( 16, true );
             freqoff     = new Vector.<Number> ( 16, true );
             reset();
-            
-            orgStream.position=0;
-            orgStream.endian = Endian.LITTLE_ENDIAN;
-            
-            //ignore the first 6 bytes of the org file
-            //TODO: DON'T IGNORE THE HEADER!
-            //check it instead...
-            orgStream.position+=6;
             
             //an array to temporarily store small chunks of data from the org file
             var stuff:ByteArray=new ByteArray();
@@ -218,7 +222,7 @@ package OrgPlayer{
             }
             //orgStream.close();
             orgStream.position=0;
-            isSongLoaded = true;
+            return isSongLoaded = true;
         }
         
         public function getSampleHunk(outBuf:ByteArray, numSamples:int):void{

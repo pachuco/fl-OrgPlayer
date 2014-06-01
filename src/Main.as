@@ -151,9 +151,8 @@ package
                     sc.stop();
                     sc = null;
                 }
-                replayer.loadSong(fr.data);
+                if (replayer.loadSong(fr.data)) tf.text=fr.name;
                 sc = audio_out.play();
-                tf.text=fr.name;
             }
                 
             fr.addEventListener(Event.COMPLETE, ass); 
