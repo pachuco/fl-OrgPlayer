@@ -17,11 +17,11 @@ TODO:
 
  *Clean up the code. Lots of things here.
  
+ *Reproduce Organya's handling of melodic samples, per octave.
+ 
  *Replace WoC's samplebank format with own, better one.
  
  *Deal with drumsample mapping(Xerxes vs original OrgMaker v2 mapping) and 'Cave Story' mode.
- 
- *Reproduce Organya's handling of melodic samples, per octave.
  
  *Synthesize instruments from PXTs.
  
