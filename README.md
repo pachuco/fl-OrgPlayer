@@ -15,7 +15,16 @@ Functional, more accurate than liborganya. Ungodly code mess.
 
 TODO:
 
- *Clean up the code. Lots of things here.
+ *Clean up the code. Lots of things here:
+ 
+ **Towers to pancakes; replace vertical vectors with horizontal classes.
+ 
+ **Separate song data from playback.
+ 
+ **Use bitwise operation instead of mult where 16 bit values are read.
+ 
+ 
+ 
  
  *Reproduce Organya's handling of melodic samples, per octave.
  
