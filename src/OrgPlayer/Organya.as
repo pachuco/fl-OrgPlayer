@@ -1,6 +1,7 @@
 package OrgPlayer{
     import flash.utils.Endian;
     import flash.utils.ByteArray;
+    import flash.utils.*;
 	/**
      * ...
      * @author me
@@ -75,7 +76,7 @@ package OrgPlayer{
             makeEven    = new Vector.<Boolean>( 8 , true );
         }
         
-        public function Organya(resStream:ByteArray){
+        public function Organya(resStream:ByteArray){ 
             
             melody      = new Vector.<ByteArray>;
             drums       = new Vector.<ByteArray>;
@@ -94,14 +95,14 @@ package OrgPlayer{
             
             //melody=new byte[mqty][mlen];
             //butt[outer][inner];
-            melody=_newMelody( mqty, mlen );
+            melody=Tools.pool1DVector(ByteArray, mqty, true);
             
             var b:ByteArray;
             for each( b in melody){
                 if(mlen)resStream.readBytes(b, 0, mlen);
             }
-            //drums=new byte[resStream.readUnsignedByte()][];
-            drums=_newDrums( resStream.readUnsignedByte() );
+            drums=Tools.pool1DVector(ByteArray, resStream.readUnsignedByte(), true);
+            
             percSampleRate=256*resStream.readUnsignedByte();
             percSampleRate+=resStream.readUnsignedByte();
             for(i=0;i<drums.length;i++){
@@ -110,7 +111,6 @@ package OrgPlayer{
                     mlen*=256;
                     mlen+=resStream.readUnsignedByte();
                 }
-                drums[i]=new ByteArray();
                 if(mlen) resStream.readBytes(drums[i], 0, mlen);
             }
             //resStream.close();
@@ -123,7 +123,6 @@ package OrgPlayer{
             
             //check the first 6 bytes of the org file
             var header:String = orgStream.readMultiByte(6, "us-ascii");
-            trace(header);
             if      (header == "Org-02") orgVersion=2
             else if (header == "Org-03") orgVersion=3
             else    return false;
@@ -164,7 +163,9 @@ package OrgPlayer{
             
             //read event data
             //data=new int[16][songLen];
-            data=_newData( 16, songLen);
+            //data=_newData( 16, songLen);
+            data=Tools.pool2DVector(int, 16, songLen, true);
+            
             
             //for each track
             for(i=0;i<16;i++){
@@ -311,55 +312,6 @@ package OrgPlayer{
                 outBuf.writeFloat(rsamp/0xFFFF);
                 outBuf.writeFloat(lsamp/0xFFFF);
             }
-        }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        //ASS section below
-        private function _newMelody(outer:int, inner:int):Vector.<ByteArray>{
-            var i:int;
-            var result:Vector.<ByteArray> = new Vector.<ByteArray>( outer, true );
-            
-            for(i=0; i<outer; i++){
-                result[i]= new ByteArray();
-                result[i].length=inner;
-                result[i].endian = Endian.LITTLE_ENDIAN;
-            }
-            return result;
-        }
-        
-        private function _newDrums(outer:int):Vector.<ByteArray>{
-            var i:int;
-            var result:Vector.<ByteArray> = new Vector.<ByteArray>( outer, true );
-            
-            for(i=0; i<outer; i++){
-                result[i]= new ByteArray();
-                result[i].endian = Endian.LITTLE_ENDIAN;
-            }
-            return result;
-        }
-        
-        private function _newData(outer:int, inner:int):Vector.<Vector.<int>>{
-            var i:int;
-            var result:Vector.<Vector.<int>> = new Vector.<Vector.<int>>( outer, true );
-            
-            for(i=0; i<outer; i++){
-                result[i]= new Vector.<int>(inner, true);
-            }
-            return result;
         }
     }
 }
