@@ -21,7 +21,7 @@ TODO:
  
  **Separate song data from playback.
  
- **Look trough all note positions for the biggest instead of using Song.loopEnd for allocating tracks.
+ **Look trough all note positions for the biggest and compare to Song.LoopEnd instead of using just loopEnd for allocating tracks.
  
  **Use bitwise operation instead of mult where 16 bit values are read.
  
