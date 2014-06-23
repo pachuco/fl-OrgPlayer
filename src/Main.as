@@ -81,23 +81,23 @@ package
             
             loadButton = makeButton("LOAD", onClickLoadButtan);
             loadButton.x = (stage.stageWidth - loadButton.width) / 8*1;
-            loadButton.y = (stage.stageHeight - loadButton.height) / 4*3;
+            loadButton.y = (stage.stageHeight - loadButton.height) / 20*19;
             addChild(loadButton);
             
             playButton = makeButton("PLAY", onClickPlayButtan);
             playButton.x = (stage.stageWidth - playButton.width) / 8*7;
-            playButton.y = (stage.stageHeight - playButton.height) / 4*3;
+            playButton.y = (stage.stageHeight - playButton.height) / 20*19;
             addChild(playButton);
             
             stopButton = makeButton("SOTP", onClickStopButtan);
             stopButton.x = (stage.stageWidth - playButton.width) / 8*7;
-            stopButton.y = (stage.stageHeight - playButton.height) / 4*3;
+            stopButton.y = (stage.stageHeight - playButton.height) / 20*19;
             stopButton.visible = false;
             addChild(stopButton);
             
             tf = makeTextField("");
             tf.x = stage.stageWidth / 2;
-            tf.y = stage.stageHeight  / 8;
+            tf.y = stage.stageHeight  / 20;
             addChild(tf);
         }
         

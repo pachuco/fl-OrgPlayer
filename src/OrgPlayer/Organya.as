@@ -9,8 +9,6 @@ package OrgPlayer{
      */
     public class Organya{
         
-        public var isSongLoaded:Boolean = false;
-        
         private var
             orgSong         :Song,
             
@@ -34,6 +32,8 @@ package OrgPlayer{
             rvol            :Vector.<Number>;
             
         private var frameLen                :Number;
+        
+        public var callBack:Function;
         
         private static const sampleRate     :Number=44100;
         
@@ -212,7 +212,6 @@ package OrgPlayer{
             }
             //orgStream.close();
             orgStream.position=0;
-            isSongLoaded = true
             return orgSong;
         }
         
@@ -263,6 +262,7 @@ package OrgPlayer{
                         click=loopStart;
                         sample=click*clickLen+1;
                     }
+                    if(callBack) callBack();
                 }
                 
                 var lsamp:int=0, rsamp:int=0;
@@ -312,5 +312,7 @@ package OrgPlayer{
                 outBuf.writeFloat(lsamp/0xFFFF);
             }
         }
+        
+        
     }
 }
