@@ -1,4 +1,4 @@
-package OrgPlayer.struct 
+package OrgPlayer.orgStruct 
 {
     /**
      * ...

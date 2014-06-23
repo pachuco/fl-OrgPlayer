@@ -2,7 +2,7 @@ package OrgPlayer{
     import flash.utils.Endian;
     import flash.utils.ByteArray;
     import flash.utils.*;
-    import OrgPlayer.struct.*;
+    import OrgPlayer.orgStruct.*;
 	/**
      * ...
      * @author me
