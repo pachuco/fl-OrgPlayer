@@ -14,7 +14,9 @@ package OrgPlayer.struct
         /*uint8      */ note            :uint,
         /*uint8      */ duration        :uint,
         /*uint8      */ volume          :uint,
-        /*uint8      */ pan             :uint;
+        /*uint8      */ pan             :uint,
+        
+        T_data:uint;
         
         public function Row() 
         {

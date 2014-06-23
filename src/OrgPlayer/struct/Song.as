@@ -15,7 +15,7 @@ package OrgPlayer.struct
         /*uint8      */ beatPerMeasure  :uint,
         /*uint8      */ clickPerBeat    :uint,
         /*uint32     */ loopStart       :uint,
-        /*uint32     */ loopStart       :uint,
+        /*uint32     */ loopEnd         :uint,
         /*&tracks[16]*/ tracks          :Vector.<Track>;
         
         public function Song() 
