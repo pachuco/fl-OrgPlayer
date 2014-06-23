@@ -24,8 +24,6 @@ package OrgPlayer{
             periodsLeft     :Vector.<int>,
             pointqty        :Vector.<int>,
             
-            data            :Vector.<Vector.<int>>,
-            
             tactive         :Vector.<Boolean>,
             pi              :Vector.<Boolean>,
             makeEven        :Vector.<Boolean>,
@@ -126,7 +124,6 @@ package OrgPlayer{
             var i:int, j:int, k:int;
             sample      = 0;
             click       = 0;
-            data        = new Vector.<Vector.<int>>;
             pi          = new Vector.<Boolean>( 16, true );
             freqoff     = new Vector.<Number> ( 16, true );
             reset();
@@ -151,33 +148,34 @@ package OrgPlayer{
                 
                 orgSong.tracks[i].instrument=orgStream.readUnsignedByte();
                 orgStream.readBytes(stuff,0,3);
-                orgSong.tracks[i].rowNum=stuff[1]+256*stuff[2];
+                orgSong.tracks[i].trackSize=stuff[1]+256*stuff[2];
                 pi[i]=stuff[0]>0;
             }
             
             //read event data
             //data=new int[16][songLen];
             //data=_newData( 16, songLen);
-            data=Tools.pool2DVector(int, 16, orgSong.loopEnd, true);
+            //data=Tools.pool2DVector(int, 16, orgSong.loopEnd, true);
+            for each (var track:Track in orgSong.tracks) track.rows = Tools.pool1DVector(Row, orgSong.loopEnd);
             
             
             //for each track
             for(i=0;i<16;i++){
                 var volume:int=0,hold:int=0,pan:int=0;
                 //tracksizes[i] is the number of events (resources) for track i
-                for(j=0;j<orgSong.tracks[i].rowNum;j++){
+                for(j=0;j<orgSong.tracks[i].trackSize;j++){
                     //read the time that the event occurs
                     orgStream.readBytes(stuff,0,4);
                     var time:int=stuff[0]+256*stuff[1];
                     
                     //put a "marker" in the data array indicating that there is an event there
-                    if(time<orgSong.loopEnd) data[i][time]=1;
+                    if(time<orgSong.loopEnd) orgSong.tracks[i].rows[time].T_data=1 ;
                 }
                 
                 //read all resource data for this track into the resdata array
                 //4 bytes per resource: note, duration, volume, pan
                 var resdata:ByteArray=new ByteArray();
-                if(orgSong.tracks[i].rowNum) orgStream.readBytes(resdata,0,orgSong.tracks[i].rowNum*4);
+                if(orgSong.tracks[i].trackSize != 0) orgStream.readBytes(resdata,0,orgSong.tracks[i].trackSize*4);
                 //index keeps track of which resource is next to be processed
                 var index:int=0;
                 
@@ -186,9 +184,9 @@ package OrgPlayer{
                     var note:int=255;
                     
                     //if this track has a resource at this position in the song
-                    if(data[i][j]==1){
+                    if(orgSong.tracks[i].rows[j].T_data==1){
                         //store the 4 bytes for this resource into the stuff array 
-                        for(k=0;k<4;k++) stuff[k]=resdata[index+orgSong.tracks[i].rowNum*k];
+                        for(k=0;k<4;k++) stuff[k]=resdata[index+orgSong.tracks[i].trackSize*k];
                         
                         index++;
                         
@@ -212,7 +210,10 @@ package OrgPlayer{
                     if(hold==0) note=256;
                     
                     //store the note, volume, and pan into the data array
-                    data[i][j]=65536*note+256*volume+pan;
+                    orgSong.tracks[i].rows[j].T_data=65536*note+256*volume+pan;
+                    orgSong.tracks[i].rows[j].note=note;
+                    orgSong.tracks[i].rows[j].volume=volume;
+                    orgSong.tracks[i].rows[j].pan=pan;
                 }
             }
             //orgStream.close();
@@ -236,9 +237,9 @@ package OrgPlayer{
                     //for each track
                     for(j=0;j<16;j++){
                         //get the note, volume, and pan values for this track at this click
-                        var tvolume:int=(data[j][click]%65536)/256;
-                        var note:int=data[j][click]/65536;
-                        var tpan:Number=(data[j][click]%256-6)/6.0;
+                        var tvolume:int=orgSong.tracks[j].rows[click].volume;
+                        var note:int=orgSong.tracks[j].rows[click].note;
+                        var tpan:Number=(orgSong.tracks[j].rows[click].pan-6)/6.0;
                         lvol[j]=rvol[j]=255*interpretVol(tvolume/255.0);
                         if(tpan<0) rvol[j]*=interpretVol(1+tpan);
                         if(tpan>0) lvol[j]*=interpretVol(1-tpan);
@@ -282,7 +283,11 @@ package OrgPlayer{
                             pos-=pos1;
                             pos2=pos1+1;
                             if(pos2==size) pos2=0;
-                            if(makeEven[j]){pos1-=pos1%2;pos2-=pos2%2;}
+                            if(makeEven[j])
+                            {
+                                pos1-=pos1%2;
+                                pos2-=pos2%2;
+                            }
                             samp1=sign(melody[ins][uint((pos1*256)/size)]);
                             samp2=sign(melody[ins][uint((pos2*256)/size)]);
                         }else{
