@@ -107,7 +107,7 @@ package OrgPlayer{
             resStream.position=0;
         }
         
-        public function loadSong(orgStream:ByteArray):Boolean{
+        public function loadSong(orgStream:ByteArray):Song{
             orgSong = new Song();
             orgStream.position=0;
             orgStream.endian = Endian.LITTLE_ENDIAN;
@@ -116,7 +116,7 @@ package OrgPlayer{
             var header:String = orgStream.readMultiByte(6, "us-ascii");
             if      (header == "Org-02") orgSong.version=2
             else if (header == "Org-03") orgSong.version=3
-            else    return false;
+            else    return null;
             
             var i:int, j:int, k:int;
             sample      = 0;
@@ -150,8 +150,6 @@ package OrgPlayer{
             
             //read event data
             //data=new int[16][songLen];
-            //data=_newData( 16, songLen);
-            //data=Tools.pool2DVector(int, 16, orgSong.loopEnd, true);
             for each (var track:Track in orgSong.tracks) track.rows = Tools.pool1DVector(Row, orgSong.loopEnd);
             
             
@@ -214,7 +212,8 @@ package OrgPlayer{
             }
             //orgStream.close();
             orgStream.position=0;
-            return isSongLoaded = true;
+            isSongLoaded = true
+            return orgSong;
         }
         
         public function getSampleHunk(outBuf:ByteArray, numSamples:int):void{

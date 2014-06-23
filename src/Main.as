@@ -7,6 +7,7 @@ package
     import flash.media.SoundChannel;
     import flash.utils.ByteArray;
     import OrgPlayer.*;
+    import OrgPlayer.struct.*;
     
     import flash.display.SimpleButton
     import flash.text.TextField;
@@ -39,6 +40,7 @@ package
         private var sc:SoundChannel;
         private var audio_out:Sound;
         private var replayer:Organya;
+        private var orgSong:Song;
         
         private var fr:FileReference;
         private var ff:FileFilter;
@@ -144,7 +146,7 @@ package
         }
         
         private function onClickPlayButtan(e:MouseEvent):void{
-            if(replayer.isSongLoaded){
+            if(orgSong){
                 sc = audio_out.play();
                 playButton.visible = false;
                 stopButton.visible = true;
@@ -165,7 +167,8 @@ package
 
             var ass:Function = function(event:Event):void {
                 onClickStopButtan(null);
-                if (replayer.loadSong(fr.data)) tf.text=fr.name;
+                orgSong = replayer.loadSong(fr.data);
+                if (orgSong) tf.text=fr.name;
                 onClickPlayButtan(null);
             }
                 
