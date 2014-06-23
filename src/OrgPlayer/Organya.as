@@ -25,19 +25,16 @@ package OrgPlayer{
             pointqty        :Vector.<int>,
             
             tactive         :Vector.<Boolean>,
-            pi              :Vector.<Boolean>,
             makeEven        :Vector.<Boolean>,
             
             tfreq           :Vector.<Number>,
             tpos            :Vector.<Number>,
-            freqoff         :Vector.<Number>,
             
             lvol            :Vector.<Number>,
             rvol            :Vector.<Number>;
             
         private var frameLen                :Number;
         
-        private static const freqDivisor    :int=256;
         private static const sampleRate     :Number=44100;
         
         private static function unsign(b:int):int{
@@ -124,8 +121,6 @@ package OrgPlayer{
             var i:int, j:int, k:int;
             sample      = 0;
             click       = 0;
-            pi          = new Vector.<Boolean>( 16, true );
-            freqoff     = new Vector.<Number> ( 16, true );
             reset();
             
             //an array to temporarily store small chunks of data from the org file
@@ -135,21 +130,22 @@ package OrgPlayer{
             orgStream.readBytes(stuff,0,12);
             
             //get the wait value (clickLen), start point (loopPoint), and end point (songLen)
-            orgSong.clickLen=int(sampleRate*(stuff[0]+256*stuff[1])/1000.0+.5);
+            orgSong.clickLen=int(sampleRate*(stuff[0]+256*stuff[1])/1000.0+0.5);
+            orgSong.beatPerMeasure = stuff[2];
+            orgSong.clickPerBeat = stuff[3];
             orgSong.loopStart=stuff[4]+256*stuff[5];
             orgSong.loopEnd=stuff[8]+256*stuff[9];
             
             //read track data
             for(i=0;i<16;i++){
                 //read and process the "freq" value
-                var freq:int=orgStream.readUnsignedByte();
-                freq+=orgStream.readUnsignedByte()*256;
-                freqoff[i]=(freq-1000.0)/freqDivisor;
+                var freq:int=orgStream.readUnsignedShort();
+                orgSong.tracks[i].freq=freq;
                 
                 orgSong.tracks[i].instrument=orgStream.readUnsignedByte();
                 orgStream.readBytes(stuff,0,3);
                 orgSong.tracks[i].trackSize=stuff[1]+256*stuff[2];
-                pi[i]=stuff[0]>0;
+                orgSong.tracks[i].pi=stuff[0];
             }
             
             //read event data
@@ -246,13 +242,13 @@ package OrgPlayer{
                         
                         if(note==256 && j<8) tactive[j]=false;
                         if(note<255){
-                            if(pi[j]){
+                            if(orgSong.tracks[j].pi){
                                 periodsLeft[j]=4;
                                 for(i=11;i<note;i+=12) periodsLeft[j]+=4;
                             }
                             tactive[j]=true;
                             tpos[j]=0.0;
-                            var foff:Number=freqoff[j];
+                            var foff:Number=(orgSong.tracks[j].freq-1000)/256;
                             for(k=24;k<=note;k+=12) if(k!=36) foff*=2;
                             tfreq[j]=frameLen*(j<8? 440.0*Math.pow(2.0,(note-45)/12.0)+foff:note*percSampleRate);
                             if(j<8){
@@ -308,7 +304,7 @@ package OrgPlayer{
                         tpos[j]+=tfreq[j];
                         while(tpos[j]>=1.0 && j<8 && tactive[j]){
                             tpos[j]--;
-                            if(pi[j]) if(--periodsLeft[j]==0) tactive[j]=false;
+                            if(orgSong.tracks[j].pi) if(--periodsLeft[j]==0) tactive[j]=false;
                         }
                         if(j>=8) if(tpos[j]>=drums[ins].length) tactive[j]=false;
                     }
