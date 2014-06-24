@@ -19,8 +19,6 @@ TODO:
  
  **Look trough all note positions for the biggest and compare to Song.LoopEnd instead of using just loopEnd for allocating tracks.
  
- **Use bitwise operation instead of mult where 16 bit values are read.
- 
  
  
  
