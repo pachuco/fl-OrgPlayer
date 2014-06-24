@@ -143,7 +143,16 @@ package OrgPlayer{
             
             //read event data
             //data=new int[16][songLen];
-            for each (var track:Track in orgSong.tracks)track.rows = Tools.pool1DVector(Row, orgSong.loopEnd);
+            for each (var track:Track in orgSong.tracks)
+            {
+                track.pos.length      = orgSong.loopEnd;
+                track.note.length     = orgSong.loopEnd;
+                track.duration.length = orgSong.loopEnd;
+                track.volume.length   = orgSong.loopEnd;
+                track.pan.length      = orgSong.loopEnd;
+                
+                track.T_data.length   = orgSong.loopEnd;
+            }
             
             
             //for each track
@@ -155,7 +164,7 @@ package OrgPlayer{
                     var time:uint = orgStream.readUnsignedInt();
                     
                     //put a "marker" in the data array indicating that there is an event there
-                    if(time<orgSong.loopEnd) orgSong.tracks[i].rows[time].T_data=1 ;
+                    if(time<orgSong.loopEnd) orgSong.tracks[i].T_data[time]=1 ;
                 }
                 
                 //read all resource data for this track into the resdata array
@@ -170,7 +179,7 @@ package OrgPlayer{
                     var note:uint=255;
                     
                     //if this track has a resource at this position in the song
-                    if(orgSong.tracks[i].rows[j].T_data==1){
+                    if(orgSong.tracks[i].T_data[j]==1){
                         //store the 4 bytes for this resource into the stuff array
                         var stuff:ByteArray=new ByteArray();
                         for(k=0;k<4;k++) stuff[k]=resdata[index+orgSong.tracks[i].trackSize*k];
@@ -198,10 +207,10 @@ package OrgPlayer{
                     if(hold==0) note=256;
                     
                     //store the note, volume, and pan into the data array
-                    orgSong.tracks[i].rows[j].T_data = 65536*note+256*volume+pan;
-                    orgSong.tracks[i].rows[j].note   = note;
-                    orgSong.tracks[i].rows[j].volume = volume;
-                    orgSong.tracks[i].rows[j].pan    = pan;
+                    orgSong.tracks[i].T_data[j] = 65536*note+256*volume+pan;
+                    orgSong.tracks[i].note[j]   = note;
+                    orgSong.tracks[i].volume[j] = volume;
+                    orgSong.tracks[i].pan[j]    = pan;
                 }
             }
             //orgStream.close();
@@ -225,9 +234,9 @@ package OrgPlayer{
                     //for each track
                     for(j=0;j<16;j++){
                         //get the note, volume, and pan values for this track at this click
-                        var tvolume:uint=orgSong.tracks[j].rows[click].volume;
-                        var note:uint=orgSong.tracks[j].rows[click].note;
-                        var tpan:Number=(orgSong.tracks[j].rows[click].pan-6)/6.0;
+                        var tvolume:uint = orgSong.tracks[j].volume[click];
+                        var note:uint    = orgSong.tracks[j].note[click];
+                        var tpan:Number  = (orgSong.tracks[j].pan[click]-6)/6.0;
                         lvol[j]=rvol[j]=255*interpretVol(tvolume/255.0);
                         if(tpan<0) rvol[j]*=interpretVol(1+tpan);
                         if(tpan>0) lvol[j]*=interpretVol(1-tpan);
