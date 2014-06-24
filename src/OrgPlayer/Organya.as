@@ -16,11 +16,11 @@ package OrgPlayer{
             drums           :Vector.<ByteArray>,
             
             sample          :int=0,
-            click           :int=0,
-            percSampleRate  :int,
+            click           :uint=0,
+            percSampleRate  :uint,
             
-            periodsLeft     :Vector.<int>,
-            pointqty        :Vector.<int>,
+            periodsLeft     :Vector.<uint>,
+            pointqty        :Vector.<uint>,
             
             tactive         :Vector.<Boolean>,
             makeEven        :Vector.<Boolean>,
@@ -57,13 +57,13 @@ package OrgPlayer{
         //but that might also cause liveness issues
         public function reset():void{
             sample=click=0;
-            periodsLeft = new Vector.<int>    ( 16, true );
+            periodsLeft = new Vector.<uint>    ( 16, true );
             tactive     = new Vector.<Boolean>( 16, true );
             tfreq       = new Vector.<Number> ( 16, true );
             tpos        = new Vector.<Number> ( 16, true );
             lvol        = new Vector.<Number> ( 16, true );
             rvol        = new Vector.<Number> ( 16, true );
-            pointqty    = new Vector.<int>    ( 8 , true );
+            pointqty    = new Vector.<uint>    ( 8 , true );
             makeEven    = new Vector.<Boolean>( 8 , true );
         }
         
@@ -77,9 +77,9 @@ package OrgPlayer{
             frameLen=1.0/sampleRate;
             
             //read sample data in from the resource file
-            var mqty:int=resStream.readUnsignedByte();
-            var mlen:int=0;
-            var i:int, j:int;
+            var mqty:uint=resStream.readUnsignedByte();
+            var mlen:uint=0;
+            var i:uint, j:uint;
             
             for(i=0;i<3;i++){mlen*=256;mlen+=resStream.readUnsignedByte()}
             
@@ -118,49 +118,41 @@ package OrgPlayer{
             else if (header == "Org-03") orgSong.version=3
             else    return null;
             
-            var i:int, j:int, k:int;
+            var i:uint, j:uint, k:uint;
             sample      = 0;
             click       = 0;
             reset();
             
-            //an array to temporarily store small chunks of data from the org file
-            var stuff:ByteArray=new ByteArray();
-            
-            //read 12 bytes of data into the array
-            orgStream.readBytes(stuff,0,12);
-            
             //get the wait value (clickLen), start point (loopPoint), and end point (songLen)
-            orgSong.clickLen=int(sampleRate*(stuff[0]+256*stuff[1])/1000.0+0.5);
-            orgSong.beatPerMeasure = stuff[2];
-            orgSong.clickPerBeat = stuff[3];
-            orgSong.loopStart=stuff[4]+256*stuff[5];
-            orgSong.loopEnd=stuff[8]+256*stuff[9];
+            orgSong.clickLen       = int(sampleRate*orgStream.readUnsignedShort()/1000.0+0.5);
+            orgSong.beatPerMeasure = orgStream.readUnsignedByte();
+            orgSong.clickPerBeat   = orgStream.readUnsignedByte();
+            orgSong.loopStart      = orgStream.readUnsignedInt();
+            orgSong.loopEnd        = orgStream.readUnsignedInt();
             
             //read track data
             for(i=0;i<16;i++){
                 //read and process the "freq" value
-                var freq:int=orgStream.readUnsignedShort();
+                var freq:uint=orgStream.readUnsignedShort();
                 orgSong.tracks[i].freq=freq;
                 
-                orgSong.tracks[i].instrument=orgStream.readUnsignedByte();
-                orgStream.readBytes(stuff,0,3);
-                orgSong.tracks[i].trackSize=stuff[1]+256*stuff[2];
-                orgSong.tracks[i].pi=stuff[0];
+                orgSong.tracks[i].instrument = orgStream.readUnsignedByte();
+                orgSong.tracks[i].pi         = orgStream.readUnsignedByte();
+                orgSong.tracks[i].trackSize  = orgStream.readUnsignedShort();
             }
             
             //read event data
             //data=new int[16][songLen];
-            for each (var track:Track in orgSong.tracks) track.rows = Tools.pool1DVector(Row, orgSong.loopEnd);
+            for each (var track:Track in orgSong.tracks)track.rows = Tools.pool1DVector(Row, orgSong.loopEnd);
             
             
             //for each track
             for(i=0;i<16;i++){
-                var volume:int=0,hold:int=0,pan:int=0;
+                var volume:uint=0,hold:uint=0,pan:uint=0;
                 //tracksizes[i] is the number of events (resources) for track i
                 for(j=0;j<orgSong.tracks[i].trackSize;j++){
                     //read the time that the event occurs
-                    orgStream.readBytes(stuff,0,4);
-                    var time:int=stuff[0]+256*stuff[1];
+                    var time:uint = orgStream.readUnsignedInt();
                     
                     //put a "marker" in the data array indicating that there is an event there
                     if(time<orgSong.loopEnd) orgSong.tracks[i].rows[time].T_data=1 ;
@@ -171,31 +163,33 @@ package OrgPlayer{
                 var resdata:ByteArray=new ByteArray();
                 if(orgSong.tracks[i].trackSize != 0) orgStream.readBytes(resdata,0,orgSong.tracks[i].trackSize*4);
                 //index keeps track of which resource is next to be processed
-                var index:int=0;
+                var index:uint=0;
                 
                 //for each "click" in the song
                 for(j=0;j<orgSong.loopEnd;j++){
-                    var note:int=255;
+                    var note:uint=255;
                     
                     //if this track has a resource at this position in the song
                     if(orgSong.tracks[i].rows[j].T_data==1){
-                        //store the 4 bytes for this resource into the stuff array 
+                        //store the 4 bytes for this resource into the stuff array
+                        var stuff:ByteArray=new ByteArray();
                         for(k=0;k<4;k++) stuff[k]=resdata[index+orgSong.tracks[i].trackSize*k];
                         
-                        index++;
                         
                         //for note, volume, and pan, a value of 255 indicates no change
                         
                         //if the note changes, set the value of hold to the duration,
                         //and mark that the sound should be re-triggered at this point
-                        note=stuff[0];
-                        if(note<255) hold=stuff[1];
+                        note              = stuff[0];
+                        if(note<255) hold = stuff[1];
                         
                         //get the volume and pan values
-                        var v:int=stuff[2];
-                        if(v<255) volume=v;
-                        var p:int=stuff[3];
-                        if(p<255) pan=p;
+                        var v:uint        = stuff[2];
+                        if(v<255) volume  = v;
+                        var p:uint        = stuff[3];
+                        if(p<255) pan     = p;
+                        
+                        index++;
                     }
                     
                     //the variable hold keeps track of how much longer the note needs to be held
@@ -204,10 +198,10 @@ package OrgPlayer{
                     if(hold==0) note=256;
                     
                     //store the note, volume, and pan into the data array
-                    orgSong.tracks[i].rows[j].T_data=65536*note+256*volume+pan;
-                    orgSong.tracks[i].rows[j].note=note;
-                    orgSong.tracks[i].rows[j].volume=volume;
-                    orgSong.tracks[i].rows[j].pan=pan;
+                    orgSong.tracks[i].rows[j].T_data = 65536*note+256*volume+pan;
+                    orgSong.tracks[i].rows[j].note   = note;
+                    orgSong.tracks[i].rows[j].volume = volume;
+                    orgSong.tracks[i].rows[j].pan    = pan;
                 }
             }
             //orgStream.close();
@@ -215,9 +209,9 @@ package OrgPlayer{
             return orgSong;
         }
         
-        public function getSampleHunk(outBuf:ByteArray, numSamples:int):void{
+        public function getSampleHunk(outBuf:ByteArray, numSamples:uint):void{
             outBuf.endian = Endian.LITTLE_ENDIAN;
-            var i:int, j:int, k:int, l:int;
+            var i:uint, j:uint, k:uint, l:uint;
             
             var clickLen :uint = orgSong.clickLen;
             var loopStart:uint = orgSong.loopStart;
@@ -231,8 +225,8 @@ package OrgPlayer{
                     //for each track
                     for(j=0;j<16;j++){
                         //get the note, volume, and pan values for this track at this click
-                        var tvolume:int=orgSong.tracks[j].rows[click].volume;
-                        var note:int=orgSong.tracks[j].rows[click].note;
+                        var tvolume:uint=orgSong.tracks[j].rows[click].volume;
+                        var note:uint=orgSong.tracks[j].rows[click].note;
                         var tpan:Number=(orgSong.tracks[j].rows[click].pan-6)/6.0;
                         lvol[j]=rvol[j]=255*interpretVol(tvolume/255.0);
                         if(tpan<0) rvol[j]*=interpretVol(1+tpan);
@@ -262,7 +256,7 @@ package OrgPlayer{
                         click=loopStart;
                         sample=click*clickLen+1;
                     }
-                    if(callBack) callBack();
+                    if(callBack != null) callBack();
                 }
                 
                 var lsamp:int=0, rsamp:int=0;
