@@ -145,13 +145,11 @@ package OrgPlayer{
             //data=new int[16][songLen];
             for each (var track:Track in orgSong.tracks)
             {
-                track.pos.length      = orgSong.loopEnd;
+                //track.pos.length      = orgSong.loopEnd;
                 track.note.length     = orgSong.loopEnd;
                 track.duration.length = orgSong.loopEnd;
                 track.volume.length   = orgSong.loopEnd;
                 track.pan.length      = orgSong.loopEnd;
-                
-                track.T_data.length   = orgSong.loopEnd;
             }
             
             
@@ -164,7 +162,7 @@ package OrgPlayer{
                     var time:uint = orgStream.readUnsignedInt();
                     
                     //put a "marker" in the data array indicating that there is an event there
-                    if(time<orgSong.loopEnd) orgSong.tracks[i].T_data[time]=1 ;
+                    if(time<orgSong.loopEnd) orgSong.tracks[i].note[time]=1 ;
                 }
                 
                 //read all resource data for this track into the resdata array
@@ -179,7 +177,7 @@ package OrgPlayer{
                     var note:uint=255;
                     
                     //if this track has a resource at this position in the song
-                    if(orgSong.tracks[i].T_data[j]==1){
+                    if(orgSong.tracks[i].note[j]==1){
                         //store the 4 bytes for this resource into the stuff array
                         var stuff:ByteArray=new ByteArray();
                         for(k=0;k<4;k++) stuff[k]=resdata[index+orgSong.tracks[i].trackSize*k];
@@ -207,7 +205,6 @@ package OrgPlayer{
                     if(hold==0) note=256;
                     
                     //store the note, volume, and pan into the data array
-                    orgSong.tracks[i].T_data[j] = 65536*note+256*volume+pan;
                     orgSong.tracks[i].note[j]   = note;
                     orgSong.tracks[i].volume[j] = volume;
                     orgSong.tracks[i].pan[j]    = pan;
