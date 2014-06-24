@@ -155,47 +155,42 @@ package OrgPlayer{
             
             //for each track
             for(i=0;i<16;i++){
-                var volume:uint=0,hold:uint=0,pan:uint=0;
-                //tracksizes[i] is the number of events (resources) for track i
-                for(j=0;j<orgSong.tracks[i].trackSize;j++){
-                    //read the time that the event occurs
-                    var time:uint = orgStream.readUnsignedInt();
-                    
+                var pos:uint=0, hold:uint=0,volume:uint=0, pan:uint=0, index:uint=0;
+                var trackSize:uint = orgSong.tracks[i].trackSize;
+                
+                var positions:Vector.<uint>  = new Vector.<uint>(orgSong.tracks[i].trackSize, true);
+                var notes:Vector.<uint>      = new Vector.<uint>(orgSong.tracks[i].trackSize, true);
+                var durations:Vector.<uint>  = new Vector.<uint>(orgSong.tracks[i].trackSize, true);
+                var volumes:Vector.<uint>    = new Vector.<uint>(orgSong.tracks[i].trackSize, true);
+                var pans:Vector.<uint>       = new Vector.<uint>(orgSong.tracks[i].trackSize, true);
+                
+                for (k=0; k<trackSize; k++) positions[k] = orgStream.readUnsignedInt();
+                for (k=0; k<trackSize; k++) notes[k]     = orgStream.readUnsignedByte();
+                for (k=0; k<trackSize; k++) durations[k] = orgStream.readUnsignedByte();
+                for (k=0; k<trackSize; k++) volumes[k]   = orgStream.readUnsignedByte();
+                for (k=0; k<trackSize; k++) pans[k]      = orgStream.readUnsignedByte();
+                
+                for(j=0; j<trackSize; j++){
                     //put a "marker" in the data array indicating that there is an event there
+                    var time:uint = positions[j];
                     if(time<orgSong.loopEnd) orgSong.tracks[i].note[time]=1 ;
                 }
                 
-                //read all resource data for this track into the resdata array
-                //4 bytes per resource: note, duration, volume, pan
-                var resdata:ByteArray=new ByteArray();
-                if(orgSong.tracks[i].trackSize != 0) orgStream.readBytes(resdata,0,orgSong.tracks[i].trackSize*4);
-                //index keeps track of which resource is next to be processed
-                var index:uint=0;
-                
-                //for each "click" in the song
-                for(j=0;j<orgSong.loopEnd;j++){
-                    var note:uint=255;
+                for(j=0; j<orgSong.loopEnd; j++){
+                    var note:uint = 255;
                     
-                    //if this track has a resource at this position in the song
                     if(orgSong.tracks[i].note[j]==1){
-                        //store the 4 bytes for this resource into the stuff array
-                        var stuff:ByteArray=new ByteArray();
-                        for(k=0;k<4;k++) stuff[k]=resdata[index+orgSong.tracks[i].trackSize*k];
-                        
-                        
                         //for note, volume, and pan, a value of 255 indicates no change
                         
                         //if the note changes, set the value of hold to the duration,
                         //and mark that the sound should be re-triggered at this point
-                        note              = stuff[0];
-                        if(note<255) hold = stuff[1];
+                        note              = notes[index];
+                        if(note<255) hold = durations[index];
                         
-                        //get the volume and pan values
-                        var v:uint        = stuff[2];
+                        var v:uint        = volumes[index];
                         if(v<255) volume  = v;
-                        var p:uint        = stuff[3];
+                        var p:uint        = pans[index];
                         if(p<255) pan     = p;
-                        
                         index++;
                     }
                     
@@ -204,11 +199,11 @@ package OrgPlayer{
                     if(note==255 && hold>0){hold--;}
                     if(hold==0) note=256;
                     
-                    //store the note, volume, and pan into the data array
                     orgSong.tracks[i].note[j]   = note;
                     orgSong.tracks[i].volume[j] = volume;
                     orgSong.tracks[i].pan[j]    = pan;
                 }
+                
             }
             //orgStream.close();
             orgStream.position=0;
