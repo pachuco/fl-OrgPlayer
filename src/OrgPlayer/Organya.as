@@ -194,7 +194,7 @@ package OrgPlayer{
                         
                         //pans: 0-12, 255
                         var p:uint        = pans[index];
-                        p                 = (p > 12 && note != 255) ? 12 : p;
+                        p                 = (p > 12 && p != 255) ? 12 : p;
                         if(p<255) pan     = p;
                         
                         index++;
@@ -285,6 +285,7 @@ package OrgPlayer{
                             pos -= pos1;
                             pos2 = pos1+1;
                             if(pos2 == size) pos2 = 0;
+                            
                             if(makeEven[j])
                             {
                                 pos1 -= pos1%2;
