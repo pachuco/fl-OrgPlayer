@@ -6,8 +6,8 @@ package
     import flash.media.Sound;
     import flash.media.SoundChannel;
     import flash.utils.ByteArray;
-    import OrgPlayer.*;
-    import OrgPlayer.orgStruct.*;
+    import orgPlayer.*;
+    import orgPlayer.struct.*;
     
     import flash.display.SimpleButton
     import flash.text.TextField;

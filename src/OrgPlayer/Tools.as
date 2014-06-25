@@ -1,4 +1,4 @@
-package OrgPlayer 
+package orgPlayer 
 {
     /**
      * ...

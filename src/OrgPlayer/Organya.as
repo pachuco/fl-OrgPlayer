@@ -1,9 +1,9 @@
-package OrgPlayer{
+package orgPlayer{
     import flash.utils.Endian;
     import flash.utils.ByteArray;
     import flash.utils.*;
-    import OrgPlayer.orgStruct.*;
-	/**
+    import orgPlayer.struct.*;
+    /**
      * ...
      * @author me
      */
@@ -19,17 +19,7 @@ package OrgPlayer{
             click           :uint=0,
             percSampleRate  :uint,
             
-            periodsLeft     :Vector.<uint>,
-            pointqty        :Vector.<uint>,
-            
-            tactive         :Vector.<Boolean>,
-            makeEven        :Vector.<Boolean>,
-            
-            tfreq           :Vector.<Number>,
-            tpos            :Vector.<Number>,
-            
-            lvol            :Vector.<Number>,
-            rvol            :Vector.<Number>;
+            voices          :Vector.<Voice>;
             
         private var frameLen                :Number;
         
@@ -55,19 +45,23 @@ package OrgPlayer{
         //but that might also cause liveness issues
         public function reset():void{
             sample = click = 0;
-            periodsLeft = new Vector.<uint>    ( 16, true );
-            tactive     = new Vector.<Boolean>( 16, true );
-            tfreq       = new Vector.<Number> ( 16, true );
-            tpos        = new Vector.<Number> ( 16, true );
-            lvol        = new Vector.<Number> ( 16, true );
-            rvol        = new Vector.<Number> ( 16, true );
-            pointqty    = new Vector.<uint>    ( 8 , true );
-            makeEven    = new Vector.<Boolean>( 8 , true );
+            for (var i:uint; i<16; i++)
+            {
+                voices[i].periodsLeft = 0;
+                voices[i].pointqty    = 0;
+                voices[i].tactive     = false;
+                voices[i].makeEven    = false;
+                voices[i].tfreq       = 0.0;
+                voices[i].tpos        = 0.0;
+                voices[i].lvol        = 0.0;
+                voices[i].rvol        = 0.0;
+            }
         }
         
         public function Organya(resStream:ByteArray){ 
             melody      = new Vector.<ByteArray>;
             drums       = new Vector.<ByteArray>;
+            voices      = Tools.pool1DVector(Voice, 16, true);
             
             resStream.position = 0;
             resStream.endian = Endian.LITTLE_ENDIAN;
@@ -113,6 +107,7 @@ package OrgPlayer{
             orgSong = new Song();
             orgStream.position = 0;
             orgStream.endian = Endian.LITTLE_ENDIAN;
+            var track:Track;
             
             //check the first 6 bytes of the org file
             var header:String = orgStream.readMultiByte(6, "us-ascii");
@@ -120,7 +115,7 @@ package OrgPlayer{
             else if (header == "Org-03") orgSong.version = 3
             else    return null;
             
-            var i:uint, j:uint, k:uint;
+            var i:uint, j:uint;
             sample      = 0;
             click       = 0;
             reset();
@@ -133,16 +128,17 @@ package OrgPlayer{
             orgSong.loopEnd        = orgStream.readUnsignedInt();
             
             //read track data
-            for(i = 0; i < 16; i++){
-                orgSong.tracks[i].freq       = orgStream.readUnsignedShort();
-                orgSong.tracks[i].instrument = orgStream.readUnsignedByte();
-                orgSong.tracks[i].pi         = orgStream.readUnsignedByte();
-                orgSong.tracks[i].trackSize  = orgStream.readUnsignedShort();
+            for each (track in orgSong.tracks)
+            {
+                track.freq       = orgStream.readUnsignedShort();
+                track.instrument = orgStream.readUnsignedByte();
+                track.pi         = orgStream.readUnsignedByte();
+                track.trackSize  = orgStream.readUnsignedShort();
             }
             
             //read event data
             //data=new int[16][songLen];
-            for each (var track:Track in orgSong.tracks)
+            for each (track in orgSong.tracks)
             {
                 //track.pos.length      = orgSong.loopEnd;
                 track.note.length     = orgSong.loopEnd;
@@ -153,32 +149,33 @@ package OrgPlayer{
             
             
             //for each track
-            for(i = 0; i<16; i++){
+            for each (track in orgSong.tracks)
+            {
                 var pos:uint=0, hold:uint=0,volume:uint=0, pan:uint=0, index:uint=0;
-                var trackSize:uint = orgSong.tracks[i].trackSize;
+                var trackSize:uint = track.trackSize;
                 
-                var positions:Vector.<uint>  = new Vector.<uint>(orgSong.tracks[i].trackSize, true);
-                var notes:Vector.<uint>      = new Vector.<uint>(orgSong.tracks[i].trackSize, true);
-                var durations:Vector.<uint>  = new Vector.<uint>(orgSong.tracks[i].trackSize, true);
-                var volumes:Vector.<uint>    = new Vector.<uint>(orgSong.tracks[i].trackSize, true);
-                var pans:Vector.<uint>       = new Vector.<uint>(orgSong.tracks[i].trackSize, true);
+                var positions:Vector.<uint>  = new Vector.<uint>(track.trackSize, true);
+                var notes:Vector.<uint>      = new Vector.<uint>(track.trackSize, true);
+                var durations:Vector.<uint>  = new Vector.<uint>(track.trackSize, true);
+                var volumes:Vector.<uint>    = new Vector.<uint>(track.trackSize, true);
+                var pans:Vector.<uint>       = new Vector.<uint>(track.trackSize, true);
                 
-                for (k = 0; k < trackSize; k++) positions[k] = orgStream.readUnsignedInt();
-                for (k = 0; k < trackSize; k++) notes[k]     = orgStream.readUnsignedByte();
-                for (k = 0; k < trackSize; k++) durations[k] = orgStream.readUnsignedByte();
-                for (k = 0; k < trackSize; k++) volumes[k]   = orgStream.readUnsignedByte();
-                for (k = 0; k < trackSize; k++) pans[k]      = orgStream.readUnsignedByte();
+                for (j = 0; j < trackSize; j++) positions[j] = orgStream.readUnsignedInt();
+                for (j = 0; j < trackSize; j++) notes[j]     = orgStream.readUnsignedByte();
+                for (j = 0; j < trackSize; j++) durations[j] = orgStream.readUnsignedByte();
+                for (j = 0; j < trackSize; j++) volumes[j]   = orgStream.readUnsignedByte();
+                for (j = 0; j < trackSize; j++) pans[j]      = orgStream.readUnsignedByte();
                 
-                for(j = 0; j < trackSize; j++){
+                for(i = 0; i < trackSize; i++){
                     //put a "marker" in the data array indicating that there is an event there
-                    var time:uint = positions[j];
-                    if(time<orgSong.loopEnd) orgSong.tracks[i].note[time]=1 ;
+                    var time:uint = positions[i];
+                    if(time<orgSong.loopEnd) track.note[time]=1 ;
                 }
                 
-                for(j = 0; j < orgSong.loopEnd; j++){
+                for(i = 0; i < orgSong.loopEnd; i++){
                     var note:uint = 255;
                     
-                    if(orgSong.tracks[i].note[j] == 1){
+                    if(track.note[i] == 1){
                         //for note, volume, and pan, a value of 255 indicates no change
                         //if the note changes, set the value of hold to the duration,
                         //and mark that the sound should be re-triggered at this point
@@ -205,9 +202,9 @@ package OrgPlayer{
                     if(note == 255 && hold>0) hold--;
                     if(hold == 0            ) note = 256;
                     
-                    orgSong.tracks[i].note[j]   = note;
-                    orgSong.tracks[i].volume[j] = volume;
-                    orgSong.tracks[i].pan[j]    = pan;
+                    track.note[i]   = note;
+                    track.volume[i] = volume;
+                    track.pan[i]    = pan;
                 }
                 
             }
@@ -219,6 +216,7 @@ package OrgPlayer{
         public function getSampleHunk(outBuf:ByteArray, numSamples:uint):void{
             outBuf.endian = Endian.LITTLE_ENDIAN;
             var i:uint, j:uint, k:uint, l:uint;
+            var voice:Voice, track:Track;
             
             var clickLen :uint = Cons.sampleRate * orgSong.clickLen / 1000.0+0.5;
             var loopStart:uint = orgSong.loopStart;
@@ -231,33 +229,35 @@ package OrgPlayer{
                 if((sample++)%clickLen == 0){
                     //for each track
                     for(j=0;j<16;j++){
-                        //get the note, volume, and pan values for this track at this click
-                        var tvolume:uint    = orgSong.tracks[j].volume[click];
-                        var note:uint       = orgSong.tracks[j].note[click];
-                        var tpan:Number     = (orgSong.tracks[j].pan[click]-6)/6.0;
-                        lvol[j]  = rvol[j]  = 255*interpretVol(tvolume/255.0);
-                        if(tpan<0) rvol[j] *= interpretVol(1+tpan);
-                        if(tpan>0) lvol[j] *= interpretVol(1-tpan);
+                        voice = voices[j];
+                        track = orgSong.tracks[j];
                         
-                        if(note== 256 && j<8) tactive[j]=false;
+                        //get the note, volume, and pan values for this track at this click
+                        var tvolume:uint    = track.volume[click];
+                        var note:uint       = track.note[click];
+                        var tpan:Number     = (track.pan[click]-6)/6.0;
+                        voice.lvol  = voice.rvol = 255*interpretVol(tvolume/255.0);
+                        if(tpan<0) voice.rvol *= interpretVol(1+tpan);
+                        if(tpan>0) voice.lvol *= interpretVol(1-tpan);
+                        
+                        if(note== 256 && j<8) voice.tactive=false;
                         if(note < 255){
-                            if(orgSong.tracks[j].pi){
-                                periodsLeft[j] = 4;
-                                for(i = 11; i < note; i+=12) periodsLeft[j] += 4;
+                            if(track.pi){
+                                voice.periodsLeft = 4;
+                                for(i = 11; i < note; i+=12) voice.periodsLeft += 4;
                             }
-                            tactive[j] = true;
-                            tpos[j] = 0.0;
-                            var foff:Number = (orgSong.tracks[j].freq-1000)/256;
+                            voice.tactive = true;
+                            voice.tpos    = 0.0;
+                            var foff:Number   = (track.freq-1000)/256;
                             for(k = 24; k <= note; k+=12) if(k != 36) foff *= 2;
                             
                             if(j < 8){
-                                tfreq[j] = frameLen*(440.0*Math.pow(2.0,(note-45)/12.0)+foff);
-                                
-                                pointqty[j] = 1024;
-                                for(i = 11; i < note; i+=12) pointqty[j] /= 2;
-                                makeEven[j] = pointqty[j] <= 256;
+                                voice.tfreq    = frameLen*(440.0*Math.pow(2.0,(note-45)/12.0)+foff);
+                                voice.pointqty = 1024;
+                                for(i = 11; i < note; i+=12) voice.pointqty /= 2;
+                                voice.makeEven = voice.pointqty <= 256;
                             }else{
-                                tfreq[j] = frameLen*note*percSampleRate;
+                                voice.tfreq    = frameLen*note*percSampleRate;
                             }
                         }
                     }
@@ -272,25 +272,29 @@ package OrgPlayer{
                 
                 var lsamp:int=0, rsamp:int=0;
                 for(j = 0; j < 16; j++){
-                    if(tactive[j]){
-                        var ins:int = orgSong.tracks[j].instrument;
+                    voice = voices[j];
+                    track = orgSong.tracks[j];
+                    
+                    if(voice.tactive){
+                        var ins:int = track.instrument;
                         var samp1:int, samp2:int, pos:Number;
                         var pos1:int, pos2:int
                         
-                        pos = tpos[j];
+                        pos = voice.tpos;
                         if(j < 8){
-                            var size:int = pointqty[j];
+                            var size:int = voice.pointqty;
                             pos *= size;
                             pos1 = uint(pos);
                             pos -= pos1;
                             pos2 = pos1+1;
                             if(pos2 == size) pos2 = 0;
-                            
-                            if(makeEven[j])
+                            //I dunno what this does, but it's working.
+                            if(voice.makeEven)
                             {
                                 pos1 -= pos1%2;
                                 pos2 -= pos2%2;
                             }
+                            
                             samp1 = sign(melody[ins][uint((pos1*256)/size)]);
                             samp2 = sign(melody[ins][uint((pos2*256)/size)]);
                         }else{
@@ -305,15 +309,15 @@ package OrgPlayer{
                         var samp:Number = (samp1+pos*(samp2-samp1));
                         
                         //multiply the sample frame by the left and right volume, and add it to the output
-                        lsamp   += lvol[j]*samp;
-                        rsamp   += rvol[j]*samp;
+                        lsamp          += voice.lvol*samp;
+                        rsamp          += voice.rvol*samp;
+                        voice.tpos     += voice.tfreq;
                         
-                        tpos[j] += tfreq[j];
-                        while(tpos[j] >= 1.0 && j < 8 && tactive[j]){
-                            tpos[j]--;
-                            if(orgSong.tracks[j].pi) if(--periodsLeft[j] == 0) tactive[j] = false;
+                        while(voice.tpos >= 1.0 && j < 8 && voice.tactive){
+                            voice.tpos--;
+                            if(track.pi) if(--voice.periodsLeft == 0) voice.tactive = false;
                         }
-                        if(j >= 8) if(tpos[j] >= drums[ins].length) tactive[j] = false;
+                        if(j >= 8) if(voice.tpos >= drums[ins].length) voice.tactive = false;
                     }
                 }
                 outBuf.writeFloat(rsamp/0xFFFF);

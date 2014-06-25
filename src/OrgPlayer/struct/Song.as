@@ -1,11 +1,11 @@
-package OrgPlayer.orgStruct 
+package orgPlayer.struct 
 {
     /**
      * ...
      * @author me
      */
     
-    import OrgPlayer.Tools;
+    import orgPlayer.Tools;
     
     public class Song 
     {
