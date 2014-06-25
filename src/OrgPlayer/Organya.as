@@ -35,8 +35,6 @@ package OrgPlayer{
         
         public var callBack:Function;
         
-        private static const sampleRate     :Number=44100;
-        
         private static function unsign(b:int):int{
             if(b < 0) b    += 256;
             return b;
@@ -74,7 +72,7 @@ package OrgPlayer{
             resStream.position = 0;
             resStream.endian = Endian.LITTLE_ENDIAN;
             //---------------------------------------------
-            frameLen = 1.0/sampleRate;
+            frameLen = 1.0/Cons.sampleRate;
             
             //read sample data in from the resource file
             var mqty:uint = resStream.readUnsignedByte();
@@ -128,7 +126,7 @@ package OrgPlayer{
             reset();
             
             //get the wait value (clickLen), start point (loopPoint), and end point (songLen)
-            orgSong.clickLen       = int(sampleRate*orgStream.readUnsignedShort()/1000.0+0.5);
+            orgSong.clickLen       = orgStream.readUnsignedShort();
             orgSong.beatPerMeasure = orgStream.readUnsignedByte();
             orgSong.clickPerBeat   = orgStream.readUnsignedByte();
             orgSong.loopStart      = orgStream.readUnsignedInt();
@@ -184,13 +182,21 @@ package OrgPlayer{
                         //for note, volume, and pan, a value of 255 indicates no change
                         //if the note changes, set the value of hold to the duration,
                         //and mark that the sound should be re-triggered at this point
-                        note              = notes[index];
+                        
+                        //notes: 0-95, 255
+                        note              = notes[index]
+                        note              = (note > 95 && note != 255) ? 95 : note;
                         if(note<255) hold = durations[index];
                         
+                        //vols: 0-254, 255
                         var v:uint        = volumes[index];
                         if(v<255) volume  = v;
+                        
+                        //pans: 0-12, 255
                         var p:uint        = pans[index];
+                        p                 = (p > 12 && note != 255) ? 12 : p;
                         if(p<255) pan     = p;
+                        
                         index++;
                     }
                     
@@ -214,7 +220,7 @@ package OrgPlayer{
             outBuf.endian = Endian.LITTLE_ENDIAN;
             var i:uint, j:uint, k:uint, l:uint;
             
-            var clickLen :uint = orgSong.clickLen;
+            var clickLen :uint = Cons.sampleRate * orgSong.clickLen / 1000.0+0.5;
             var loopStart:uint = orgSong.loopStart;
             var loopEnd  :uint = orgSong.loopEnd;
             
@@ -243,11 +249,15 @@ package OrgPlayer{
                             tpos[j] = 0.0;
                             var foff:Number = (orgSong.tracks[j].freq-1000)/256;
                             for(k = 24; k <= note; k+=12) if(k != 36) foff *= 2;
-                            tfreq[j] = frameLen*(j < 8 ? 440.0*Math.pow(2.0,(note-45)/12.0)+foff : note*percSampleRate);
+                            
                             if(j < 8){
+                                tfreq[j] = frameLen*(440.0*Math.pow(2.0,(note-45)/12.0)+foff);
+                                
                                 pointqty[j] = 1024;
                                 for(i = 11; i < note; i+=12) pointqty[j] /= 2;
                                 makeEven[j] = pointqty[j] <= 256;
+                            }else{
+                                tfreq[j] = frameLen*note*percSampleRate;
                             }
                         }
                     }
