@@ -26,7 +26,7 @@ TODO:
  
  *Replace WoC's samplebank format with own, better one.
  
- *Deal with drumsample mapping(Xerxes vs original OrgMaker v2 mapping) and 'Cave Story' mode.
+ *Deal with drumsample mapping(Xaser vs original OrgMaker v2 mapping) and 'Cave Story' mode.
  
  *Synthesize instruments from PXTs.
  
