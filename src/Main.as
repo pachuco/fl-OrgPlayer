@@ -37,7 +37,8 @@ package
         
         private var buf_size:uint = 4092;
         
-        private var sc:SoundChannel;
+        private var scs:Vector.<SoundChannel>;
+        
         private var audio_out:Sound;
         private var replayer:Organya;
         private var orgSong:Song;
@@ -49,7 +50,10 @@ package
         
         private var loadButton:SimpleButton;
         private var playButton:SimpleButton;
+        private var pauseButton:SimpleButton;
         private var stopButton:SimpleButton;
+        private var activity:Sprite;
+        private var inactivity:Sprite;
         
         public function Main():void 
         {
@@ -65,8 +69,26 @@ package
             audio_out = new Sound();
             audio_out.addEventListener(SampleDataEvent.SAMPLE_DATA, audio_loop);
             replayer = new Organya( new smp_data() as ByteArray);
+            scs = new Vector.<SoundChannel>();
             
-            
+            //-------------
+            activity = new Sprite();
+            activity.graphics.beginFill(0x46B525);
+            activity.graphics.drawRect(0, 0, stage.stageWidth/2, 5);
+            activity.graphics.endFill();
+            activity.x =  stage.stageWidth/2;
+            activity.y = (stage.stageHeight - activity.height) / 40*39;
+            activity.visible = false;
+            addChild(activity);
+            inactivity = new Sprite();
+            inactivity.graphics.beginFill(0xE3491A);
+            inactivity.graphics.drawRect(0, 0, stage.stageWidth/2, 5);
+            inactivity.graphics.endFill();
+            inactivity.x =  stage.stageWidth/2;
+            inactivity.y = (stage.stageHeight - inactivity.height) / 40*39;
+            inactivity.visible = true;
+            addChild(inactivity);
+            //-------------
             
             
             
@@ -85,14 +107,18 @@ package
             addChild(loadButton);
             
             playButton = makeButton("PLAY", onClickPlayButtan);
-            playButton.x = (stage.stageWidth - playButton.width) / 8*7;
+            playButton.x = (stage.stageWidth - playButton.width) / 15*15 -80*2;
             playButton.y = (stage.stageHeight - playButton.height) / 20*19;
             addChild(playButton);
             
+            pauseButton = makeButton("PAUSE", onClickPauseButtan);
+            pauseButton.x = (stage.stageWidth - pauseButton.width) / 15*15 -80*1 ;
+            pauseButton.y = (stage.stageHeight - pauseButton.height) / 20*19;
+            addChild(pauseButton);
+            
             stopButton = makeButton("SOTP", onClickStopButtan);
-            stopButton.x = (stage.stageWidth - playButton.width) / 8*7;
-            stopButton.y = (stage.stageHeight - playButton.height) / 20*19;
-            stopButton.visible = false;
+            stopButton.x = (stage.stageWidth - stopButton.width) / 15*15;
+            stopButton.y = (stage.stageHeight - stopButton.height) / 20*19;
             addChild(stopButton);
             
             tf = makeTextField("");
@@ -141,32 +167,56 @@ package
             return t;
         }
         
+        private function stopSomeAudio():void{
+            var sc:SoundChannel = scs.pop();
+            if(sc){
+                sc.stop();
+                sc = null;
+            }
+            if(scs.length == 0){
+                activity.visible = false;
+                inactivity.visible = true;
+            }
+        }
+        
+        private function stopAllAudio():void{
+            var sc:SoundChannel;
+            for each(sc in scs){
+                sc.stop();
+                sc = null;
+            }
+            scs = new Vector.<SoundChannel>();
+            activity.visible = false;
+            inactivity.visible = true;
+        }
+        
         private function onClickLoadButtan(e:MouseEvent):void{
             fr.browse([ff]);
         }
         
         private function onClickPlayButtan(e:MouseEvent):void{
-            if(orgSong){
-                sc = audio_out.play();
-                playButton.visible = false;
-                stopButton.visible = true;
+            var isPlaying:Boolean = false;
+            if(orgSong && isPlaying != true){
+                activity.visible = true;
+                inactivity.visible = false;
+                scs.push(audio_out.play());
             }
             
         }
         
+        private function onClickPauseButtan(e:MouseEvent):void{
+            stopSomeAudio();
+        }
+        
         private function onClickStopButtan(e:MouseEvent):void{
-            if(sc) {
-                sc.stop();
-                sc = null;
-                playButton.visible = true;
-                stopButton.visible = false;
-            }
+            stopAllAudio();
+            replayer.reset();
         }
         
         private function onFileSelected(evt:Event):void{ 
 
             var ass:Function = function(event:Event):void {
-                onClickStopButtan(null);
+                onClickPauseButtan(null);
                 orgSong = replayer.loadSong(fr.data);
                 if (orgSong) tf.text=fr.name;
                 onClickPlayButtan(null);
