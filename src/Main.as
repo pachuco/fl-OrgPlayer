@@ -74,18 +74,18 @@ package
             //-------------
             activity = new Sprite();
             activity.graphics.beginFill(0x46B525);
-            activity.graphics.drawRect(0, 0, stage.stageWidth/2, 5);
+            activity.graphics.drawRect(0, 0, stage.stageWidth/2, 20);
             activity.graphics.endFill();
-            activity.x =  stage.stageWidth/2;
-            activity.y = (stage.stageHeight - activity.height) / 40*39;
+            activity.x = stage.stageWidth/2;
+            activity.y = stage.stageHeight / 40*38 +2;
             activity.visible = false;
             addChild(activity);
             inactivity = new Sprite();
             inactivity.graphics.beginFill(0xE3491A);
-            inactivity.graphics.drawRect(0, 0, stage.stageWidth/2, 5);
+            inactivity.graphics.drawRect(0, 0, stage.stageWidth/2, 20);
             inactivity.graphics.endFill();
-            inactivity.x =  stage.stageWidth/2;
-            inactivity.y = (stage.stageHeight - inactivity.height) / 40*39;
+            inactivity.x = stage.stageWidth/2;
+            inactivity.y = stage.stageHeight / 40*38 +2;
             inactivity.visible = true;
             addChild(inactivity);
             //-------------
@@ -221,7 +221,7 @@ package
                 if (orgSong) tf.text=fr.name;
                 onClickPlayButtan(null);
             }
-                
+            stopAllAudio();
             fr.addEventListener(Event.COMPLETE, ass); 
             fr.load();
         } 
