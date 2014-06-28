@@ -115,7 +115,7 @@ package orgPlayer{
             else if (header == "Org-03") orgSong.version = 3
             else    return null;
             
-            var i:uint, j:uint;
+            var i:uint, j:uint, k:uint;
             sample      = 0;
             click       = 0;
             reset();
@@ -153,6 +153,11 @@ package orgPlayer{
                 track.duration.length = orgSong.loopEnd;
                 track.volume.length   = orgSong.loopEnd;
                 track.pan.length      = orgSong.loopEnd;
+                
+                for each (k in track.note)   k = 255;
+                
+                for each (k in track.volume) k = 255;
+                for each (k in track.pan)    k = 255;
             }
             
             
@@ -177,30 +182,26 @@ package orgPlayer{
                 for(i = 0; i < trackSize; i++){
                     //put a "marker" in the data array indicating that there is an event there
                     var time:uint = positions[i];
-                    if(time<orgSong.loopEnd) track.activity[time]=1 ;
+                    if(time<orgSong.loopEnd) track.activity[time] |=1 ;
                 }
                 
-                for(i = 0; i < orgSong.loopEnd; i++){
+                for (i = 0; i < orgSong.loopEnd; i++) {
                     var note:uint = 255;
                     
-                    if(track.activity[i] == 1){
+                    if(track.activity[i] & 0x01){
                         //for note, volume, and pan, a value of 255 indicates no change
                         //if the note changes, set the value of hold to the duration,
                         //and mark that the sound should be re-triggered at this point
                         
                         //notes: 0-95, 255
-                        note              = notes[index]
-                        note              = (note > 95 && note != 255) ? 95 : note;
+                        note         = notes[index];
+                        note         = (note > 95 && note != 255) ? 95 : note;
                         if(note<255) hold = durations[index];
-                        
                         //vols: 0-254, 255
-                        var v:uint        = volumes[index];
-                        if(v<255) volume  = v;
-                        
+                        volume       = volumes[index];
                         //pans: 0-12, 255
-                        var p:uint        = pans[index];
-                        p                 = (p > 12 && p != 255) ? 12 : p;
-                        if(p<255) pan     = p;
+                        pan          = pans[index];
+                        pan          = (pan > 12 && pan != 255) ? 255 : pan;
                         
                         index++;
                     }
@@ -208,11 +209,14 @@ package orgPlayer{
                     //the variable hold keeps track of how much longer the note needs to be held
                     //I use the note value 256 to indicate the note release
                     if(note == 255 && hold>0) hold--;
-                    if(hold == 0            ) track.activity[i] = 2;
+                    if(hold == 0            ) track.activity[i] |= 0x02;
                     
-                    track.note[i]   = note;
-                    track.volume[i] = volume;
-                    track.pan[i]    = pan;
+                    if (track.activity[i] & 0x01)
+                    {
+                        track.note[i]   = note;
+                        track.volume[i] = volume;
+                        track.pan[i]    = pan;
+                    }
                 }
                 
             }
@@ -241,15 +245,23 @@ package orgPlayer{
                         track = orgSong.tracks[j];
                         
                         //get the note, volume, and pan values for this track at this click
-                        var tvolume:uint    = track.volume[click];
-                        var note:uint       = track.note[click];
-                        var tpan:Number     = (track.pan[click]-6)/6.0;
-                        voice.lvol  = voice.rvol = 255*interpretVol(tvolume/255.0);
-                        if(tpan<0) voice.rvol *= interpretVol(1+tpan);
-                        if(tpan>0) voice.lvol *= interpretVol(1-tpan);
+                        var activity:uint = track.activity[click];
+                        var volume:uint   = track.volume[click];
+                        var note:uint     = track.note[click];
+                        var pan:uint      = track.pan[click];
                         
-                        if(track.activity[click]==2 && j<8) voice.tactive=false;
-                        if(note < 255){
+                        if(activity & 0x02 && j<8) voice.tactive=false;
+                        if (!(activity & 0x01))    continue;
+                        
+                        if (volume <= 254) voice.vol = 255*interpretVol(volume/255.0);
+                        if (pan <= 12)     voice.pan = (pan - 6) / 6.0;
+                        
+                        voice.lvol  = voice.rvol = voice.vol;
+                        if(voice.pan<0) voice.rvol *= interpretVol(1+voice.pan);
+                        if(voice.pan>0) voice.lvol *= interpretVol(1-voice.pan);
+                        
+                        if (note < 255)
+                        {
                             if(track.pi){
                                 voice.periodsLeft = 4;
                                 for(i = 11; i < note; i+=12) voice.periodsLeft += 4;
