@@ -15,6 +15,7 @@ package orgPlayer.struct
         /*uint8      */ pi              :uint,
         /*uint16     */ trackSize       :uint,
         
+                        activity        :Vector.<uint>,
         ///*uint32[]   */ pos             :Vector.<uint>,
         /*uint8[]    */ note            :Vector.<uint>,
         /*uint8[]    */ duration        :Vector.<uint>,

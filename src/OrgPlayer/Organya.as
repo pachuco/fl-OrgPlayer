@@ -110,7 +110,7 @@ package orgPlayer{
             var track:Track;
             
             //check the first 6 bytes of the org file
-            var header:String = orgStream.readMultiByte(6, "us-ascii");
+            var header:String = orgStream.readMultiByte(6, Cons.charSet);
             if      (header == "Org-02") orgSong.version = 2
             else if (header == "Org-03") orgSong.version = 3
             else    return null;
@@ -140,6 +140,14 @@ package orgPlayer{
             //data=new int[16][songLen];
             for each (track in orgSong.tracks)
             {
+                track.activity = new Vector.<uint>();
+                //track.pos      = new Vector.<uint>();
+                track.note     = new Vector.<uint>();
+                track.duration = new Vector.<uint>();
+                track.volume   = new Vector.<uint>();
+                track.pan      = new Vector.<uint>();
+                
+                track.activity.length = orgSong.loopEnd;
                 //track.pos.length      = orgSong.loopEnd;
                 track.note.length     = orgSong.loopEnd;
                 track.duration.length = orgSong.loopEnd;
@@ -169,13 +177,13 @@ package orgPlayer{
                 for(i = 0; i < trackSize; i++){
                     //put a "marker" in the data array indicating that there is an event there
                     var time:uint = positions[i];
-                    if(time<orgSong.loopEnd) track.note[time]=1 ;
+                    if(time<orgSong.loopEnd) track.activity[time]=1 ;
                 }
                 
                 for(i = 0; i < orgSong.loopEnd; i++){
                     var note:uint = 255;
                     
-                    if(track.note[i] == 1){
+                    if(track.activity[i] == 1){
                         //for note, volume, and pan, a value of 255 indicates no change
                         //if the note changes, set the value of hold to the duration,
                         //and mark that the sound should be re-triggered at this point
@@ -200,7 +208,7 @@ package orgPlayer{
                     //the variable hold keeps track of how much longer the note needs to be held
                     //I use the note value 256 to indicate the note release
                     if(note == 255 && hold>0) hold--;
-                    if(hold == 0            ) note = 256;
+                    if(hold == 0            ) track.activity[i] = 2;
                     
                     track.note[i]   = note;
                     track.volume[i] = volume;
@@ -240,7 +248,7 @@ package orgPlayer{
                         if(tpan<0) voice.rvol *= interpretVol(1+tpan);
                         if(tpan>0) voice.lvol *= interpretVol(1-tpan);
                         
-                        if(note== 256 && j<8) voice.tactive=false;
+                        if(track.activity[click]==2 && j<8) voice.tactive=false;
                         if(note < 255){
                             if(track.pi){
                                 voice.periodsLeft = 4;

@@ -9,6 +9,7 @@ package orgPlayer
         public static const
         
         sampleRate:uint = 44100,
+        charSet:String  = "us-ascii",
         noteFreq:Vector.<uint> = Vector.<uint>([ 
             33408, // C
             35584, // C#
