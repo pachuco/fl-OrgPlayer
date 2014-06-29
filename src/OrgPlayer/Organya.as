@@ -10,7 +10,7 @@ package orgPlayer{
     public class Organya{
         
         private var
-            orgSong         :Song,
+            song         :Song,
             
             melody          :Vector.<ByteArray>,
             drums           :Vector.<ByteArray>,
@@ -104,15 +104,16 @@ package orgPlayer{
         }
         
         public function loadSong(orgStream:ByteArray):Song{
-            orgSong = new Song();
             orgStream.position = 0;
             orgStream.endian = Endian.LITTLE_ENDIAN;
+            
+            var song:Song = new Song();
             var track:Track;
             
             //check the first 6 bytes of the org file
             var header:String = orgStream.readMultiByte(6, Cons.charSet);
-            if      (header == "Org-02") orgSong.version = 2
-            else if (header == "Org-03") orgSong.version = 3
+            if      (header == "Org-02") song.version = 2
+            else if (header == "Org-03") song.version = 3
             else    return null;
             
             var i:uint, j:uint, k:uint;
@@ -121,14 +122,14 @@ package orgPlayer{
             reset();
             
             //get the wait value (clickLen), start point (loopPoint), and end point (songLen)
-            orgSong.clickLen       = orgStream.readUnsignedShort();
-            orgSong.beatPerMeasure = orgStream.readUnsignedByte();
-            orgSong.clickPerBeat   = orgStream.readUnsignedByte();
-            orgSong.loopStart      = orgStream.readUnsignedInt();
-            orgSong.loopEnd        = orgStream.readUnsignedInt();
+            song.wait       = orgStream.readUnsignedShort();
+            song.beatPerMeasure = orgStream.readUnsignedByte();
+            song.clickPerBeat   = orgStream.readUnsignedByte();
+            song.loopStart      = orgStream.readUnsignedInt();
+            song.loopEnd        = orgStream.readUnsignedInt();
             
             //read track data
-            for each (track in orgSong.tracks)
+            for each (track in song.tracks)
             {
                 track.freq       = orgStream.readUnsignedShort();
                 track.instrument = orgStream.readUnsignedByte();
@@ -136,37 +137,12 @@ package orgPlayer{
                 track.trackSize  = orgStream.readUnsignedShort();
             }
             
-            //read event data
-            //data=new int[16][songLen];
-            for each (track in orgSong.tracks)
-            {
-                track.activity = new Vector.<uint>();
-                //track.pos      = new Vector.<uint>();
-                track.note     = new Vector.<uint>();
-                track.duration = new Vector.<uint>();
-                track.volume   = new Vector.<uint>();
-                track.pan      = new Vector.<uint>();
-                
-                track.activity.length = orgSong.loopEnd;
-                //track.pos.length      = orgSong.loopEnd;
-                track.note.length     = orgSong.loopEnd;
-                track.duration.length = orgSong.loopEnd;
-                track.volume.length   = orgSong.loopEnd;
-                track.pan.length      = orgSong.loopEnd;
-                
-                for each (k in track.note)   k = 255;
-                
-                for each (k in track.volume) k = 255;
-                for each (k in track.pan)    k = 255;
-            }
             
             
             //for each track
-            for each (track in orgSong.tracks)
+            for each (track in song.tracks)
             {
-                var pos:uint=0, hold:uint=0,volume:uint=0, pan:uint=0, index:uint=0;
                 var trackSize:uint = track.trackSize;
-                
                 var positions:Vector.<uint>  = new Vector.<uint>(track.trackSize, true);
                 var notes:Vector.<uint>      = new Vector.<uint>(track.trackSize, true);
                 var durations:Vector.<uint>  = new Vector.<uint>(track.trackSize, true);
@@ -179,79 +155,171 @@ package orgPlayer{
                 for (j = 0; j < trackSize; j++) volumes[j]   = orgStream.readUnsignedByte();
                 for (j = 0; j < trackSize; j++) pans[j]      = orgStream.readUnsignedByte();
                 
+                var maxPos:uint = 0;
+                for each(k in positions) maxPos = k > maxPos ? k : maxPos;
+                maxPos = song.loopEnd > maxPos ? song.loopEnd : maxPos;
+                
+                track.activity = new Vector.<uint>();
+                //track.pos      = new Vector.<uint>();
+                track.note     = new Vector.<uint>();
+                track.duration = new Vector.<uint>();
+                track.volume   = new Vector.<uint>();
+                track.pan      = new Vector.<uint>();
+                track.activity.length = maxPos;
+                track.note.length     = maxPos;
+                track.duration.length = maxPos;
+                track.volume.length   = maxPos;
+                track.pan.length      = maxPos;
+                
                 for(i = 0; i < trackSize; i++){
                     //put a "marker" in the data array indicating that there is an event there
-                    var time:uint = positions[i];
-                    if(time<orgSong.loopEnd) track.activity[time] |=1 ;
+                    track.activity[positions[i]] = 1;
                 }
                 
-                for (i = 0; i < orgSong.loopEnd; i++) {
+                var pos:uint=0, volume:uint=0, pan:uint=0, index:uint=0, duration:uint=0;
+                for (i = 0; i < song.loopEnd; i++) {
                     var note:uint = 255;
                     
-                    if(track.activity[i] & 0x01){
+                    if(track.activity[i]){
                         //for note, volume, and pan, a value of 255 indicates no change
                         //if the note changes, set the value of hold to the duration,
                         //and mark that the sound should be re-triggered at this point
                         
-                        //notes: 0-95, 255
+                        //notes:   0-95, 255
                         note         = notes[index];
-                        note         = (note > 95 && note != 255) ? 95 : note;
-                        if(note<255) hold = durations[index];
-                        //vols: 0-254, 255
+                        note         = (note > 95 && note != 255) ? 255 : note;
+                        //lengths: 1-255
+                        duration     = durations[index];
+                        //vols:    0-254, 255
                         volume       = volumes[index];
-                        //pans: 0-12, 255
+                        //pans:    0-12, 255
                         pan          = pans[index];
                         pan          = (pan > 12 && pan != 255) ? 255 : pan;
                         
                         index++;
                     }
                     
-                    //the variable hold keeps track of how much longer the note needs to be held
-                    //I use the note value 256 to indicate the note release
-                    if(note == 255 && hold>0) hold--;
-                    if(hold == 0            ) track.activity[i] |= 0x02;
-                    
-                    if (track.activity[i] & 0x01)
+                    if (track.activity[i])
                     {
-                        track.note[i]   = note;
-                        track.volume[i] = volume;
-                        track.pan[i]    = pan;
+                        track.note[i]     = note;
+                        track.duration[i] = duration;
+                        track.volume[i]   = volume;
+                        track.pan[i]      = pan;
+                    }else
+                    {
+                        track.note[i]     = 255;
+                        track.duration[i] = 255;
+                        track.volume[i]   = 255;
+                        track.pan[i]      = 255;
                     }
                 }
                 
             }
             //orgStream.close();
             orgStream.position = 0;
-            return orgSong;
+            this.song = song;
+            return song;
         }
         
-        public function getSampleHunk(outBuf:ByteArray, numSamples:uint):void{
+        public function saveSong(song:Song):ByteArray
+        {
+            var track:Track, kuk:uint;
+            var i:uint, j:uint, k:uint;
+            
+            var lengths:Vector.<uint> = new Vector.<uint>(16, true);
+            
+            
+            var data:ByteArray = new ByteArray();
+            data.endian = Endian.LITTLE_ENDIAN;
+            
+            //if this were C, we would calculate some sizes here for malloc
+            //
+            
+            //header and song info
+            if      (song.version == 2) data.writeMultiByte("Org-02", Cons.charSet)
+            else if (song.version == 3) data.writeMultiByte("Org-03", Cons.charSet)
+            else    return null;
+            data.writeShort       (song.wait);
+            data.writeByte        (song.beatPerMeasure);
+            data.writeByte        (song.clickPerBeat);
+            data.writeUnsignedInt (song.loopStart);
+            data.writeUnsignedInt (song.loopEnd);
+            
+            //all tracks info
+            for (i = 0; i<16; i++ )
+            {
+                track = song.tracks[i];
+                var len:uint = track.activity.length;
+                tlen = 0;
+                
+                data.writeShort       (track.freq);
+                data.writeByte        (track.instrument);
+                data.writeByte        (track.pi);
+                var tlen:uint;
+                for each (kuk in track.activity) if (kuk) tlen++;
+                data.writeShort       (tlen);
+                lengths[i] = tlen;
+            }
+            
+            //track data
+            for (i = 0; i < 16; i++ )
+            {
+                track = song.tracks[i];
+                len   = track.activity.length;
+                
+                //position
+                for (j = 0; j < len; j++ )
+                    if (track.activity[j]) data.writeUnsignedInt(j);
+                //notes
+                for (j = 0; j < len; j++ )
+                    if (track.activity[j]) data.writeByte(track.note[j]);
+                //duration
+                for (j = 0; j < len; j++ )
+                    if (track.activity[j]) data.writeByte(track.duration[j]);
+                //volume
+                for (j = 0; j < len; j++ )
+                    if (track.activity[j]) data.writeByte(track.volume[j]);
+                //pan
+                for (j = 0; j < len; j++ )
+                    if (track.activity[j]) data.writeByte(track.pan[j]);
+            }
+            
+            data.position = 0;
+            return data;
+        }
+        
+        public function getSampleHunk(outBuf:ByteArray, numSamples:uint):void
+        {
             outBuf.endian = Endian.LITTLE_ENDIAN;
             var i:uint, j:uint, k:uint, l:uint;
             var voice:Voice, track:Track;
             
-            var clickLen :uint = Cons.sampleRate * orgSong.clickLen / 1000.0+0.5;
-            var loopStart:uint = orgSong.loopStart;
-            var loopEnd  :uint = orgSong.loopEnd;
+            var clickLen :uint = Cons.sampleRate * song.wait / 1000.0+0.5;
+            var loopStart:uint = song.loopStart;
+            var loopEnd  :uint = song.loopEnd;
             
             for(l = 0; l < numSamples; l++){
                 //the variable sample keeps track of which sample is currently being played
                 //increment it and check if it was a multiple of clickLen before being incremented
                 //if it is, move to the next click and process any data for that click
-                if((sample++)%clickLen == 0){
+                if ((sample++) % clickLen == 0)
+                {
                     //for each track
-                    for(j=0;j<16;j++){
+                    for (j = 0; j < 16; j++)
+                    {
                         voice = voices[j];
-                        track = orgSong.tracks[j];
+                        track = song.tracks[j];
+                        voice.clicksLeft--;
                         
                         //get the note, volume, and pan values for this track at this click
                         var activity:uint = track.activity[click];
-                        var volume:uint   = track.volume[click];
                         var note:uint     = track.note[click];
+                        var duration:uint = track.duration[click];
+                        var volume:uint   = track.volume[click];
                         var pan:uint      = track.pan[click];
                         
-                        if(activity & 0x02 && j<8) voice.tactive=false;
-                        if (!(activity & 0x01))    continue;
+                        if (voice.clicksLeft<=0 && j < 8) voice.tactive = false;
+                        if (!activity)    continue;
                         
                         if (volume <= 254) voice.vol = 255*interpretVol(volume/255.0);
                         if (pan <= 12)     voice.pan = (pan - 6) / 6.0;
@@ -260,30 +328,36 @@ package orgPlayer{
                         if(voice.pan<0) voice.rvol *= interpretVol(1+voice.pan);
                         if(voice.pan>0) voice.lvol *= interpretVol(1-voice.pan);
                         
-                        if (note < 255)
+                        if (note <= 95)
                         {
-                            if(track.pi){
+                            if (track.pi)
+                            {
                                 voice.periodsLeft = 4;
                                 for(i = 11; i < note; i+=12) voice.periodsLeft += 4;
                             }
+                            voice.clicksLeft = duration;
                             voice.tactive = true;
                             voice.tpos    = 0.0;
+                            
                             var foff:Number   = (track.freq-1000)/256;
                             for(k = 24; k <= note; k+=12) if(k != 36) foff *= 2;
                             
-                            if(j < 8){
+                            if (j < 8)
+                            {
                                 voice.tfreq    = frameLen*(440.0*Math.pow(2.0,(note-45)/12.0)+foff);
                                 voice.pointqty = 1024;
                                 for(i = 11; i < note; i+=12) voice.pointqty /= 2;
                                 voice.makeEven = voice.pointqty <= 256;
-                            }else{
+                            }else
+                            {
                                 voice.tfreq    = frameLen*note*percSampleRate;
                             }
                         }
                     }
                     //increment click
                     //check to see if we've reached the end of the song, and loop back if so
-                    if(++click == loopEnd){
+                    if (++click == loopEnd)
+                    {
                         click  = loopStart;
                         sample = click*clickLen+1;
                     }
@@ -293,7 +367,7 @@ package orgPlayer{
                 var lsamp:int=0, rsamp:int=0;
                 for(j = 0; j < 16; j++){
                     voice = voices[j];
-                    track = orgSong.tracks[j];
+                    track = song.tracks[j];
                     
                     if(voice.tactive){
                         var ins:int = track.instrument;

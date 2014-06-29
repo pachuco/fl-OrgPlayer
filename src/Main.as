@@ -43,7 +43,8 @@ package
         private var replayer:Organya;
         private var orgSong:Song;
         
-        private var fr:FileReference;
+        private var frLoad:FileReference;
+        private var frSave:FileReference;
         private var ff:FileFilter;
         
         private var tf:TextField;
@@ -98,7 +99,9 @@ package
             
             
             
-            fr = new FileReference();
+            frLoad = new FileReference();
+            frSave = new FileReference();
+            frLoad.addEventListener(Event.SELECT, onLoadFileSelected);
             ff = new FileFilter("Organya files", "*.org;org.*");
             
             loadButton = makeButton("LOAD", onClickLoadButtan);
@@ -109,7 +112,7 @@ package
             saveButton = makeButton("SAVE", onClickSaveButtan);
             saveButton.x = (stage.stageWidth - saveButton.width) / 8*0 + 83;
             saveButton.y = (stage.stageHeight - saveButton.height) / 20*19;
-            //addChild(saveButton);
+            addChild(saveButton);
             
             playButton = makeButton("PLAY", onClickPlayButtan);
             playButton.x = (stage.stageWidth - playButton.width) / 15*15 -80*2;
@@ -196,12 +199,11 @@ package
         }
         
         private function onClickLoadButtan(e:MouseEvent):void {
-            fr.addEventListener(Event.SELECT, onLoadFileSelected);
-            fr.browse([ff]);
+            frLoad.browse([ff]);
         }
         
         private function onClickSaveButtan(e:MouseEvent):void {
-            //if (orgSong) fr.save(replayer.saveSong(orgSong), tf.text);
+            if (orgSong) frSave.save(replayer.saveSong(orgSong), tf.text);
         }
         
         private function onClickPlayButtan(e:MouseEvent):void{
@@ -226,15 +228,13 @@ package
         private function onLoadFileSelected(evt:Event):void {
             var ass:Function = function(event:Event):void {
                 onClickPauseButtan(null);
-                orgSong = replayer.loadSong(fr.data);
-                if (orgSong) tf.text=fr.name;
+                orgSong = replayer.loadSong(frLoad.data);
+                if (orgSong) tf.text=frLoad.name;
                 onClickPlayButtan(null);
             }
             stopAllAudio();
-            fr.addEventListener(Event.COMPLETE, ass); 
-            fr.load();
-            
-            fr.removeEventListener(Event.SELECT, onLoadFileSelected);
+            frLoad.addEventListener(Event.COMPLETE, ass); 
+            frLoad.load();
         }
         
         private function audio_loop( event:SampleDataEvent ):void{

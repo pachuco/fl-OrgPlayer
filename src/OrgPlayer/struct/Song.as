@@ -11,7 +11,7 @@ package orgPlayer.struct
     {
         public var
         /*uint8      */ version         :uint, //Org-02 Org-03
-        /*uint16     */ clickLen        :uint,
+        /*uint16     */ wait            :uint,
         /*uint8      */ beatPerMeasure  :uint,
         /*uint8      */ clickPerBeat    :uint,
         /*uint32     */ loopStart       :uint,

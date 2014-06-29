@@ -18,9 +18,11 @@ package orgPlayer.struct
             rvol            :Number,
             
             vol             :Number,
-            pan             :Number=0,
+            pan             :Number = 0,
             
-            smpPosFrac      :int; // -1 means inactive voice
+            clicksLeft      :int,
+            
+            smpPosFrac      :uint; // TODO
         
         
         public function Voice() 

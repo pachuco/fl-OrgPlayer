@@ -15,8 +15,9 @@ package orgPlayer.struct
         /*uint8      */ pi              :uint,
         /*uint16     */ trackSize       :uint,
         
+        
                         activity        :Vector.<uint>,
-        ///*uint32[]   */ pos             :Vector.<uint>,
+        
         /*uint8[]    */ note            :Vector.<uint>,
         /*uint8[]    */ duration        :Vector.<uint>,
         /*uint8[]    */ volume          :Vector.<uint>,
@@ -24,11 +25,7 @@ package orgPlayer.struct
         
         public function Track() 
         {
-            //pos      = new Vector.<uint>();
-            note     = new Vector.<uint>();
-            duration = new Vector.<uint>();
-            volume   = new Vector.<uint>();
-            pan      = new Vector.<uint>();
+            
         }
         
     }
