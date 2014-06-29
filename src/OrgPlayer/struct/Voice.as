@@ -15,7 +15,12 @@ package orgPlayer.struct
             tfreq           :Number,
             tpos            :Number,
             lvol            :Number,
-            rvol            :Number;
+            rvol            :Number,
+            
+            vol             :Number,
+            pan             :Number=0,
+            
+            smpPosFrac      :int; // -1 means inactive voice
         
         
         public function Voice() 

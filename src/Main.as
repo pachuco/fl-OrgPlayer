@@ -49,6 +49,7 @@ package
         private var tf:TextField;
         
         private var loadButton:SimpleButton;
+        private var saveButton:SimpleButton;
         private var playButton:SimpleButton;
         private var pauseButton:SimpleButton;
         private var stopButton:SimpleButton;
@@ -98,13 +99,17 @@ package
             
             
             fr = new FileReference();
-            fr.addEventListener(Event.SELECT, onFileSelected);
             ff = new FileFilter("Organya files", "*.org;org.*");
             
             loadButton = makeButton("LOAD", onClickLoadButtan);
-            loadButton.x = (stage.stageWidth - loadButton.width) / 8*1;
+            loadButton.x = (stage.stageWidth - loadButton.width) / 8*0 + 3;
             loadButton.y = (stage.stageHeight - loadButton.height) / 20*19;
             addChild(loadButton);
+            
+            saveButton = makeButton("SAVE", onClickSaveButtan);
+            saveButton.x = (stage.stageWidth - saveButton.width) / 8*0 + 83;
+            saveButton.y = (stage.stageHeight - saveButton.height) / 20*19;
+            //addChild(saveButton);
             
             playButton = makeButton("PLAY", onClickPlayButtan);
             playButton.x = (stage.stageWidth - playButton.width) / 15*15 -80*2;
@@ -190,8 +195,13 @@ package
             inactivity.visible = true;
         }
         
-        private function onClickLoadButtan(e:MouseEvent):void{
+        private function onClickLoadButtan(e:MouseEvent):void {
+            fr.addEventListener(Event.SELECT, onLoadFileSelected);
             fr.browse([ff]);
+        }
+        
+        private function onClickSaveButtan(e:MouseEvent):void {
+            //if (orgSong) fr.save(replayer.saveSong(orgSong), tf.text);
         }
         
         private function onClickPlayButtan(e:MouseEvent):void{
@@ -213,8 +223,7 @@ package
             replayer.reset();
         }
         
-        private function onFileSelected(evt:Event):void{ 
-
+        private function onLoadFileSelected(evt:Event):void {
             var ass:Function = function(event:Event):void {
                 onClickPauseButtan(null);
                 orgSong = replayer.loadSong(fr.data);
@@ -224,7 +233,9 @@ package
             stopAllAudio();
             fr.addEventListener(Event.COMPLETE, ass); 
             fr.load();
-        } 
+            
+            fr.removeEventListener(Event.SELECT, onLoadFileSelected);
+        }
         
         private function audio_loop( event:SampleDataEvent ):void{
             replayer.getSampleHunk( event.data, buf_size );
