@@ -8,6 +8,7 @@ package orgPlayer
     {
         public static const
         
+        arbitraryPosLimit = 24 * 1024 * 1024 / 16 / 5,
         sampleRate:uint = 44100,
         charSet:String  = "us-ascii",
         noteFreq:Vector.<uint> = Vector.<uint>([ 

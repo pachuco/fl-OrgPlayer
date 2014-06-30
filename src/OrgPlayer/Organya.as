@@ -40,9 +40,6 @@ package orgPlayer{
             return Math.pow(10,vol-1);
         }
         
-        //do not call this method during playback
-        //adding the "sychronized" keyword to both this method and the getSampleFrame method would allow it
-        //but that might also cause liveness issues
         public function reset():void{
             sample = click = 0;
             for (var i:uint; i<16; i++)
@@ -117,8 +114,6 @@ package orgPlayer{
             else    return null;
             
             var i:uint, j:uint, k:uint;
-            sample      = 0;
-            click       = 0;
             reset();
             
             //get the wait value (clickLen), start point (loopPoint), and end point (songLen)
@@ -138,45 +133,49 @@ package orgPlayer{
             }
             
             
-            
+            trace("kuk");
             //for each track
             for each (track in song.tracks)
             {
                 var trackSize:uint = track.trackSize;
-                var positions:Vector.<uint>  = new Vector.<uint>(track.trackSize, true);
+                var positions:Vector.<int>   = new Vector.<int>(track.trackSize, true);
                 var notes:Vector.<uint>      = new Vector.<uint>(track.trackSize, true);
                 var durations:Vector.<uint>  = new Vector.<uint>(track.trackSize, true);
                 var volumes:Vector.<uint>    = new Vector.<uint>(track.trackSize, true);
                 var pans:Vector.<uint>       = new Vector.<uint>(track.trackSize, true);
                 
-                for (j = 0; j < trackSize; j++) positions[j] = orgStream.readUnsignedInt();
+                for (j = 0; j < trackSize; j++) positions[j] = orgStream.readInt();
                 for (j = 0; j < trackSize; j++) notes[j]     = orgStream.readUnsignedByte();
                 for (j = 0; j < trackSize; j++) durations[j] = orgStream.readUnsignedByte();
                 for (j = 0; j < trackSize; j++) volumes[j]   = orgStream.readUnsignedByte();
                 for (j = 0; j < trackSize; j++) pans[j]      = orgStream.readUnsignedByte();
                 
-                //var maxPos:uint = 0;
-                //for each(k in positions) maxPos = k > maxPos ? k : maxPos;
-                //maxPos = song.loopEnd > maxPos ? song.loopEnd : maxPos;
-                
+                var maxPos:uint = 0;
+                for each(var pos:int in positions) maxPos = (pos > maxPos && pos < Cons.arbitraryPosLimit) ? pos : maxPos;
+                maxPos = song.loopEnd > maxPos ? song.loopEnd : maxPos;
+                trace(maxPos);
                 track.activity = new ByteArray();
                 track.note     = new ByteArray();
                 track.duration = new ByteArray();
                 track.volume   = new ByteArray();
                 track.pan      = new ByteArray();
-                track.activity.length = song.loopEnd;
-                track.note.length     = song.loopEnd;
-                track.duration.length = song.loopEnd;
-                track.volume.length   = song.loopEnd;
-                track.pan.length      = song.loopEnd;
+                track.activity.length = maxPos;
+                track.note.length     = maxPos;
+                track.duration.length = maxPos;
+                track.volume.length   = maxPos;
+                track.pan.length      = maxPos;
                 
                 for(i = 0; i < trackSize; i++){
                     //put a "marker" in the data array indicating that there is an event there
                     var time:uint = positions[i];
-                    if(time<song.loopEnd) track.activity[time] = 1;
+                    
+                    if (time >= maxPos) continue;
+                    if (time < 0) continue;
+                    if (time >= Cons.arbitraryPosLimit) continue;
+                    track.activity[time] = 1;
                 }
                 
-                var pos:uint=0, volume:uint=0, pan:uint=0, index:uint=0, duration:uint=0;
+                var volume:uint=0, pan:uint=0, index:uint=0, duration:uint=0;
                 for (j = 0; j < song.loopEnd; j++) {
                     var note:uint = 255;
                     
