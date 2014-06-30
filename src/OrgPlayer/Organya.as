@@ -301,78 +301,14 @@ package orgPlayer{
         public function getSampleHunk(outBuf:ByteArray, numSamples:uint):void
         {
             outBuf.endian = Endian.LITTLE_ENDIAN;
-            var i:uint, j:uint, k:uint, l:uint;
+            var i:uint, j:uint;
             var voice:Voice, track:Track;
             
             var clickLen :uint = Cons.sampleRate * song.wait / 1000.0+0.5;
-            var loopStart:uint = song.loopStart;
-            var loopEnd  :uint = song.loopEnd;
             
-            for(l = 0; l < numSamples; l++){
-                //the variable sample keeps track of which sample is currently being played
-                //increment it and check if it was a multiple of clickLen before being incremented
-                //if it is, move to the next click and process any data for that click
-                if ((sample++) % clickLen == 0)
-                {
-                    //for each track
-                    for (j = 0; j < 16; j++)
-                    {
-                        voice = voices[j];
-                        track = song.tracks[j];
-                        voice.clicksLeft--;
-                        
-                        //get the note, volume, and pan values for this track at this click
-                        var activity:uint = track.activity[click];
-                        var note:uint     = track.note[click];
-                        var duration:uint = track.duration[click];
-                        var volume:uint   = track.volume[click];
-                        var pan:uint      = track.pan[click];
-                        
-                        if (voice.clicksLeft<=0 && j < 8) voice.tactive = false;
-                        if (!activity)    continue;
-                        
-                        if (volume <= 254)          voice.vol = 255*interpretVol(volume/255.0);
-                        if (pan <= Cons.maxPan)     voice.pan = (pan - 6) / 6.0;
-                        
-                        voice.lvol  = voice.rvol = voice.vol;
-                        if(voice.pan<0) voice.lvol *= interpretVol(1+voice.pan);
-                        if(voice.pan>0) voice.rvol *= interpretVol(1-voice.pan);
-                        
-                        if (note <= Cons.maxNote)
-                        {
-                            if (track.pi)
-                            {
-                                voice.periodsLeft = 4;
-                                for(i = 11; i < note; i+=12) voice.periodsLeft += 4;
-                            }
-                            voice.clicksLeft = duration;
-                            voice.tactive = true;
-                            voice.tpos    = 0.0;
-                            
-                            var foff:Number   = (track.freq-1000)/256;
-                            for(k = 24; k <= note; k+=12) if(k != 36) foff *= 2;
-                            
-                            if (j < 8)
-                            {
-                                voice.tfreq    = frameLen*(440.0*Math.pow(2.0,(note-45)/12.0)+foff);
-                                voice.pointqty = 1024;
-                                for(i = 11; i < note; i+=12) voice.pointqty /= 2;
-                                voice.makeEven = voice.pointqty <= 256;
-                            }else
-                            {
-                                voice.tfreq    = frameLen*note*percSampleRate;
-                            }
-                        }
-                    }
-                    //increment click
-                    //check to see if we've reached the end of the song, and loop back if so
-                    if (++click == loopEnd)
-                    {
-                        click  = loopStart;
-                        sample = click*clickLen+1;
-                    }
-                    if(callBack != null) callBack();
-                }
+            for (i = 0; i < numSamples; i++) {
+                
+                if ((sample++) % clickLen == 0) advanceBeat();
                 
                 var lsamp:int=0, rsamp:int=0;
                 for(j = 0; j < 16; j++){
@@ -429,6 +365,74 @@ package orgPlayer{
             }
         }
         
+        private function advanceBeat():void
+        {
+            var i:uint, j:uint;
+            var voice:Voice, track:Track;
+            var loopStart:uint = song.loopStart;
+            var loopEnd  :uint = song.loopEnd;
+            
+            var clickLen :uint = Cons.sampleRate * song.wait / 1000.0+0.5;
+            
+            //for each track
+            for (i = 0; i < 16; i++)
+            {
+                voice = voices[i];
+                track = song.tracks[i];
+                voice.clicksLeft--;
+                
+                //get the note, volume, and pan values for this track at this click
+                var activity:uint = track.activity[click];
+                var note:uint     = track.note[click];
+                var duration:uint = track.duration[click];
+                var volume:uint   = track.volume[click];
+                var pan:uint      = track.pan[click];
+                
+                if (voice.clicksLeft<=0 && i < 8) voice.tactive = false;
+                if (!activity)    continue;
+                
+                if (volume <= 254)          voice.vol = 255*interpretVol(volume/255.0);
+                if (pan <= Cons.maxPan)     voice.pan = (pan - 6) / 6.0;
+                
+                voice.lvol  = voice.rvol = voice.vol;
+                if(voice.pan<0) voice.lvol *= interpretVol(1+voice.pan);
+                if(voice.pan>0) voice.rvol *= interpretVol(1-voice.pan);
+                
+                if (note <= Cons.maxNote)
+                {
+                    if (track.pi)
+                    {
+                        voice.periodsLeft = 4;
+                        for(j = 11; j < note; j+=12) voice.periodsLeft += 4;
+                    }
+                    voice.clicksLeft = duration;
+                    voice.tactive = true;
+                    voice.tpos    = 0.0;
+                    
+                    var foff:Number   = (track.freq-1000)/256;
+                    for(j = 24; j <= note; j+=12) if(j != 36) foff *= 2;
+                    
+                    if (i < 8)
+                    {
+                        voice.tfreq    = frameLen*(440.0*Math.pow(2.0,(note-45)/12.0)+foff);
+                        voice.pointqty = 1024;
+                        for(j = 11; j < note; j+=12) voice.pointqty /= 2;
+                        voice.makeEven = voice.pointqty <= 256;
+                    }else
+                    {
+                        voice.tfreq    = frameLen*note*percSampleRate;
+                    }
+                }
+            }
+            //increment click
+            //check to see if we've reached the end of the song, and loop back if so
+            if (++click == loopEnd)
+            {
+                click  = loopStart;
+                sample = click*clickLen+1;
+            }
+            if(callBack != null) callBack();
+        }
         
     }
 }
