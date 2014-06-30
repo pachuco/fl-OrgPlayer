@@ -8,9 +8,18 @@ package orgPlayer
     {
         public static const
         
-        arbitraryPosLimit = 24 * 1024 * 1024 / 16 / 5,
+        //megabytes * 1024 * 1024 / chan / ByteArrays
+        arbitraryPosLimit :uint = 24 * 1024 * 1024 / 16 / 5,
+        maxEvents         :uint = 4096,
+        maxNote           :uint = 95,
+        maxPan            :uint = 12,
+        
+        
+        
         sampleRate:uint = 44100,
+        
         charSet:String  = "us-ascii",
+        
         noteFreq:Vector.<uint> = Vector.<uint>([ 
             33408, // C
             35584, // C#

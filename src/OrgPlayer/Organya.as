@@ -169,6 +169,7 @@ package orgPlayer{
                     //put a "marker" in the data array indicating that there is an event there
                     var time:uint = positions[i];
                     
+                    if (i > Cons.maxEvents) break;
                     if (time >= maxPos) continue;
                     if (time < 0) continue;
                     if (time >= Cons.arbitraryPosLimit) continue;
@@ -182,7 +183,7 @@ package orgPlayer{
                     if(track.activity[j]){
                         //notes:   0-95, 255
                         note         = notes[index];
-                        note         = (note > 95 && note != 255) ? 255 : note;
+                        note         = (note > Cons.maxNote && note != 255) ? 255 : note;
                         //lengths: 1-255
                         duration     = durations[index];
                         duration     = duration == 0 ? 1 : duration;
@@ -190,7 +191,7 @@ package orgPlayer{
                         volume       = volumes[index];
                         //pans:    0-12, 255
                         pan          = pans[index];
-                        pan          = (pan > 12 && pan != 255) ? 255 : pan;
+                        pan          = (pan > Cons.maxPan && pan != 255) ? 255 : pan;
                         
                         index++;
                         
@@ -250,6 +251,7 @@ package orgPlayer{
                 data.writeByte        (track.pi);
                 var tlen:uint;
                 for each (kuk in track.activity) if (kuk) tlen++;
+                tlen = tlen > Cons.maxEvents ? Cons.maxEvents : tlen; 
                 data.writeShort       (tlen);
                 lengths[i] = tlen;
             }
@@ -262,19 +264,34 @@ package orgPlayer{
                 
                 //position
                 for (j = 0; j < len; j++ )
+                {
+                    if (j > Cons.maxEvents) break;
                     if (track.activity[j]) data.writeUnsignedInt(j);
+                }
                 //notes
                 for (j = 0; j < len; j++ )
+                {
+                    if (j > Cons.maxEvents) break;
                     if (track.activity[j]) data.writeByte(track.note[j]);
+                }
                 //duration
                 for (j = 0; j < len; j++ )
+                {
+                    if (j > Cons.maxEvents) break;
                     if (track.activity[j]) data.writeByte(track.duration[j]);
+                }
                 //volume
                 for (j = 0; j < len; j++ )
+                {
+                    if (j > Cons.maxEvents) break;
                     if (track.activity[j]) data.writeByte(track.volume[j]);
+                }
                 //pan
                 for (j = 0; j < len; j++ )
+                {
+                    if (j > Cons.maxEvents) break;
                     if (track.activity[j]) data.writeByte(track.pan[j]);
+                }
             }
             
             data.position = 0;
@@ -314,14 +331,14 @@ package orgPlayer{
                         if (voice.clicksLeft<=0 && j < 8) voice.tactive = false;
                         if (!activity)    continue;
                         
-                        if (volume <= 254) voice.vol = 255*interpretVol(volume/255.0);
-                        if (pan <= 12)     voice.pan = (pan - 6) / 6.0;
+                        if (volume <= 254)          voice.vol = 255*interpretVol(volume/255.0);
+                        if (pan <= Cons.maxPan)     voice.pan = (pan - 6) / 6.0;
                         
                         voice.lvol  = voice.rvol = voice.vol;
-                        if(voice.pan<0) voice.rvol *= interpretVol(1+voice.pan);
-                        if(voice.pan>0) voice.lvol *= interpretVol(1-voice.pan);
+                        if(voice.pan<0) voice.lvol *= interpretVol(1+voice.pan);
+                        if(voice.pan>0) voice.rvol *= interpretVol(1-voice.pan);
                         
-                        if (note <= 95)
+                        if (note <= Cons.maxNote)
                         {
                             if (track.pi)
                             {

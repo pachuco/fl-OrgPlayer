@@ -14,11 +14,11 @@ package orgPlayer.struct
             makeEven        :Boolean, //m
             tfreq           :Number,
             tpos            :Number,
-            lvol            :Number,
-            rvol            :Number,
+            lvol            :Number = 0,
+            rvol            :Number = 0,
             
-            vol             :Number,
-            pan             :Number = 0,
+            vol             :Number = 0,
+            pan             :Number = 6,
             
             clicksLeft      :int,
             
