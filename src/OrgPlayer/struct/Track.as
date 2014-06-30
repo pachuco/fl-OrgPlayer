@@ -5,6 +5,7 @@ package orgPlayer.struct
      * @author me
      */
     
+    import flash.utils.ByteArray;
     import orgPlayer.Tools;
     
     public class Track 
@@ -16,12 +17,12 @@ package orgPlayer.struct
         /*uint16     */ trackSize       :uint,
         
         
-                        activity        :Vector.<uint>,
+                        activity        :ByteArray,
         
-        /*uint8[]    */ note            :Vector.<uint>,
-        /*uint8[]    */ duration        :Vector.<uint>,
-        /*uint8[]    */ volume          :Vector.<uint>,
-        /*uint8[]    */ pan             :Vector.<uint>;
+        /*uint8[]    */ note            :ByteArray,
+        /*uint8[]    */ duration        :ByteArray,
+        /*uint8[]    */ volume          :ByteArray,
+        /*uint8[]    */ pan             :ByteArray;
         
         public function Track() 
         {

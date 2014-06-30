@@ -159,12 +159,11 @@ package orgPlayer{
                 //for each(k in positions) maxPos = k > maxPos ? k : maxPos;
                 //maxPos = song.loopEnd > maxPos ? song.loopEnd : maxPos;
                 
-                track.activity = new Vector.<uint>();
-                //track.pos      = new Vector.<uint>();
-                track.note     = new Vector.<uint>();
-                track.duration = new Vector.<uint>();
-                track.volume   = new Vector.<uint>();
-                track.pan      = new Vector.<uint>();
+                track.activity = new ByteArray();
+                track.note     = new ByteArray();
+                track.duration = new ByteArray();
+                track.volume   = new ByteArray();
+                track.pan      = new ByteArray();
                 track.activity.length = song.loopEnd;
                 track.note.length     = song.loopEnd;
                 track.duration.length = song.loopEnd;
@@ -178,10 +177,10 @@ package orgPlayer{
                 }
                 
                 var pos:uint=0, volume:uint=0, pan:uint=0, index:uint=0, duration:uint=0;
-                for (i = 0; i < song.loopEnd; i++) {
+                for (j = 0; j < song.loopEnd; j++) {
                     var note:uint = 255;
                     
-                    if(track.activity[i]){
+                    if(track.activity[j]){
                         //notes:   0-95, 255
                         note         = notes[index];
                         note         = (note > 95 && note != 255) ? 255 : note;
@@ -196,16 +195,16 @@ package orgPlayer{
                         
                         index++;
                         
-                        track.note[i]     = note;
-                        track.duration[i] = duration;
-                        track.volume[i]   = volume;
-                        track.pan[i]      = pan;
+                        track.note[j]     = note;
+                        track.duration[j] = duration;
+                        track.volume[j]   = volume;
+                        track.pan[j]      = pan;
                     }else
                     {
-                        track.note[i]     = 255;
-                        track.duration[i] = 255;
-                        track.volume[i]   = 255;
-                        track.pan[i]      = 255;
+                        track.note[j]     = 255;
+                        track.duration[j] = 255;
+                        track.volume[j]   = 255;
+                        track.pan[j]      = 255;
                     }
                 }
                 
