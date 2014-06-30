@@ -122,7 +122,7 @@ package orgPlayer{
             reset();
             
             //get the wait value (clickLen), start point (loopPoint), and end point (songLen)
-            song.wait       = orgStream.readUnsignedShort();
+            song.wait           = orgStream.readUnsignedShort();
             song.beatPerMeasure = orgStream.readUnsignedByte();
             song.clickPerBeat   = orgStream.readUnsignedByte();
             song.loopStart      = orgStream.readUnsignedInt();
@@ -155,9 +155,9 @@ package orgPlayer{
                 for (j = 0; j < trackSize; j++) volumes[j]   = orgStream.readUnsignedByte();
                 for (j = 0; j < trackSize; j++) pans[j]      = orgStream.readUnsignedByte();
                 
-                var maxPos:uint = 0;
-                for each(k in positions) maxPos = k > maxPos ? k : maxPos;
-                maxPos = song.loopEnd > maxPos ? song.loopEnd : maxPos;
+                //var maxPos:uint = 0;
+                //for each(k in positions) maxPos = k > maxPos ? k : maxPos;
+                //maxPos = song.loopEnd > maxPos ? song.loopEnd : maxPos;
                 
                 track.activity = new Vector.<uint>();
                 //track.pos      = new Vector.<uint>();
@@ -165,15 +165,16 @@ package orgPlayer{
                 track.duration = new Vector.<uint>();
                 track.volume   = new Vector.<uint>();
                 track.pan      = new Vector.<uint>();
-                track.activity.length = maxPos;
-                track.note.length     = maxPos;
-                track.duration.length = maxPos;
-                track.volume.length   = maxPos;
-                track.pan.length      = maxPos;
+                track.activity.length = song.loopEnd;
+                track.note.length     = song.loopEnd;
+                track.duration.length = song.loopEnd;
+                track.volume.length   = song.loopEnd;
+                track.pan.length      = song.loopEnd;
                 
                 for(i = 0; i < trackSize; i++){
                     //put a "marker" in the data array indicating that there is an event there
-                    track.activity[positions[i]] = 1;
+                    var time:uint = positions[i];
+                    if(time<song.loopEnd) track.activity[time] = 1;
                 }
                 
                 var pos:uint=0, volume:uint=0, pan:uint=0, index:uint=0, duration:uint=0;
@@ -181,15 +182,12 @@ package orgPlayer{
                     var note:uint = 255;
                     
                     if(track.activity[i]){
-                        //for note, volume, and pan, a value of 255 indicates no change
-                        //if the note changes, set the value of hold to the duration,
-                        //and mark that the sound should be re-triggered at this point
-                        
                         //notes:   0-95, 255
                         note         = notes[index];
                         note         = (note > 95 && note != 255) ? 255 : note;
                         //lengths: 1-255
                         duration     = durations[index];
+                        duration     = duration == 0 ? 1 : duration;
                         //vols:    0-254, 255
                         volume       = volumes[index];
                         //pans:    0-12, 255
@@ -197,10 +195,7 @@ package orgPlayer{
                         pan          = (pan > 12 && pan != 255) ? 255 : pan;
                         
                         index++;
-                    }
-                    
-                    if (track.activity[i])
-                    {
+                        
                         track.note[i]     = note;
                         track.duration[i] = duration;
                         track.volume[i]   = volume;
