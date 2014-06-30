@@ -61,7 +61,7 @@ package orgPlayer{
             voices      = Tools.pool1DVector(Voice, 16, true);
             
             resStream.position = 0;
-            resStream.endian = Endian.LITTLE_ENDIAN;
+            resStream.endian = Endian.BIG_ENDIAN;
             //---------------------------------------------
             frameLen = 1.0/Cons.sampleRate;
             
@@ -72,7 +72,7 @@ package orgPlayer{
             
             for(i = 0; i < 3; i++)
             {
-                mlen *= 256;
+                mlen <<= 8;
                 mlen += resStream.readUnsignedByte()
             }
             
@@ -86,12 +86,12 @@ package orgPlayer{
             }
             drums = Tools.pool1DVector(ByteArray, resStream.readUnsignedByte(), true);
             
-            percSampleRate  = 256*resStream.readUnsignedByte();
-            percSampleRate += resStream.readUnsignedByte();
+            percSampleRate  = resStream.readUnsignedByte() << 8;
+            percSampleRate += resStream.readUnsignedByte() - 256;
             for(i = 0; i < drums.length; i++){
                 mlen = 0;
                 for(j = 0; j < 3; j++){
-                    mlen *= 256;
+                    mlen <<= 8;
                     mlen += resStream.readUnsignedByte();
                 }
                 if(mlen) resStream.readBytes(drums[i], 0, mlen);
