@@ -392,7 +392,7 @@ package orgPlayer{
                 var volume:uint   = track.volume[click];
                 var pan:uint      = track.pan[click];
                 
-                if (voice.clicksLeft<=0 && i < 8) voice.active = FALSE;
+                if (int(voice.clicksLeft<=0) & int(i < 8)) voice.active = FALSE;
                 if (!activity)    continue;
                 
                 if (volume <= 254)          voice.vol = 255*interpretVol(volume/255.0);
@@ -435,7 +435,7 @@ package orgPlayer{
                 click  = loopStart;
                 sample = click*clickLen+1;
             }
-            if(callBack != null) callBack();
+            //if(callBack != null) callBack();
         }
         
     }
