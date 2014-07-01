@@ -9,6 +9,10 @@ package orgPlayer{
      */
     public class Organya{
         
+        private const TRUE:uint  = 1;
+        private const FALSE:uint = 0;
+        
+        
         private var
             song         :Song,
             
@@ -46,8 +50,8 @@ package orgPlayer{
             {
                 voices[i].periodsLeft = 0;
                 voices[i].pointqty    = 0;
-                voices[i].tactive     = false;
-                voices[i].makeEven    = false;
+                voices[i].active      = FALSE;
+                voices[i].makeEven    = FALSE;
                 voices[i].tfreq       = 0.0;
                 voices[i].tpos        = 0.0;
                 voices[i].lvol        = 0.0;
@@ -315,7 +319,7 @@ package orgPlayer{
                     voice = voices[j];
                     track = song.tracks[j];
                     
-                    if(voice.tactive){
+                    if(voice.active){
                         var ins:int = track.instrument;
                         var samp1:int, samp2:int, pos:Number;
                         var pos1:int, pos2:int
@@ -353,11 +357,11 @@ package orgPlayer{
                         rsamp          += voice.rvol*samp;
                         voice.tpos     += voice.tfreq;
                         
-                        while(voice.tpos >= 1.0 && j < 8 && voice.tactive){
+                        while(int(voice.tpos >= 1.0) & int(j < 8) & voice.active){
                             voice.tpos--;
-                            if(track.pi) if(--voice.periodsLeft == 0) voice.tactive = false;
+                            if(track.pi) if(--voice.periodsLeft == 0) voice.active = FALSE;
                         }
-                        if(j >= 8) if(voice.tpos >= drums[ins].length) voice.tactive = false;
+                        if(j >= 8) if(voice.tpos >= drums[ins].length) voice.active = FALSE;
                     }
                 }
                 outBuf.writeFloat(rsamp/0xFFFF);
@@ -388,7 +392,7 @@ package orgPlayer{
                 var volume:uint   = track.volume[click];
                 var pan:uint      = track.pan[click];
                 
-                if (voice.clicksLeft<=0 && i < 8) voice.tactive = false;
+                if (voice.clicksLeft<=0 && i < 8) voice.active = FALSE;
                 if (!activity)    continue;
                 
                 if (volume <= 254)          voice.vol = 255*interpretVol(volume/255.0);
@@ -406,7 +410,7 @@ package orgPlayer{
                         for(j = 11; j < note; j+=12) voice.periodsLeft += 4;
                     }
                     voice.clicksLeft = duration;
-                    voice.tactive = true;
+                    voice.active = TRUE;
                     voice.tpos    = 0.0;
                     
                     var foff:Number   = (track.freq-1000)/256;
@@ -417,7 +421,7 @@ package orgPlayer{
                         voice.tfreq    = frameLen*(440.0*Math.pow(2.0,(note-45)/12.0)+foff);
                         voice.pointqty = 1024;
                         for(j = 11; j < note; j+=12) voice.pointqty /= 2;
-                        voice.makeEven = voice.pointqty <= 256;
+                        voice.makeEven = voice.pointqty <= 256 ? 1 : 0;
                     }else
                     {
                         voice.tfreq    = frameLen*note*percSampleRate;

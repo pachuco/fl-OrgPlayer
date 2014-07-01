@@ -10,8 +10,8 @@ package orgPlayer.struct
         public var
             periodsLeft     :uint,    //m
             pointqty        :uint,    //m
-            tactive         :Boolean,
-            makeEven        :Boolean, //m
+            active          :uint,
+            makeEven        :uint, //m
             tfreq           :Number,
             tpos            :Number,
             lvol            :Number = 0,
