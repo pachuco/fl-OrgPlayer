@@ -90,8 +90,8 @@ package orgPlayer{
             }
             drums = Tools.pool1DVector(ByteArray, resStream.readUnsignedByte(), true);
             
-            percSampleRate  = resStream.readUnsignedByte() << 8;
-            percSampleRate += resStream.readUnsignedByte() - 256;
+            percSampleRate  = (resStream.readUnsignedByte()-1) << 8;
+            percSampleRate += resStream.readUnsignedByte();
             for(i = 0; i < drums.length; i++){
                 mlen = 0;
                 for(j = 0; j < 3; j++){
