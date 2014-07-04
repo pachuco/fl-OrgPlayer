@@ -15,14 +15,11 @@ Functional, more accurate than liborganya. Ungodly code mess.
 
 TODO:
 
- *Clean up the code. Lots of things here:
- 
- **Look trough all note positions for the biggest and compare to Song.LoopEnd instead of using just loopEnd for allocating tracks.
- 
- 
- 
+ *Some code clean.
  
  *Reproduce Organya's handling of melodic samples, per octave.
+ 
+ *I changed my mind. This is gonna be a tracker instead of just a player.
  
  *Replace WoC's samplebank format with own, better one.
  
