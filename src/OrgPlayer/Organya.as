@@ -12,9 +12,8 @@ package orgPlayer{
         private const TRUE:uint  = 1;
         private const FALSE:uint = 0;
         
-        
         private var
-            song         :Song,
+            song            :Song,
             
             melody          :Vector.<ByteArray>,
             drums           :Vector.<ByteArray>,
@@ -27,13 +26,14 @@ package orgPlayer{
             
         private var frameLen                :Number;
         
-        public var callBack:Function;
         
+        [inline]
         private static function unsign(b:int):int{
             if(b < 0) b    += 256;
             return b;
         }
         
+        [inline]
         private static function   sign(b:int):int{
             if(b >= 128) b -= 256
             return b;
@@ -410,7 +410,7 @@ package orgPlayer{
                         for(j = 11; j < note; j+=12) voice.periodsLeft += 4;
                     }
                     voice.clicksLeft = duration;
-                    voice.active = TRUE;
+                    voice.active  = TRUE;
                     voice.tpos    = 0.0;
                     
                     var foff:Number   = (track.freq-1000)/256;
@@ -418,10 +418,10 @@ package orgPlayer{
                     
                     if (i < 8)
                     {
-                        voice.tfreq    = frameLen*(440.0*Math.pow(2.0,(note-45)/12.0)+foff);
+                        voice.tfreq    = frameLen*(440.0 * Math.pow(2.0,(note-45)/12.0) + foff);
                         voice.pointqty = 1024;
                         for(j = 11; j < note; j+=12) voice.pointqty /= 2;
-                        voice.makeEven = voice.pointqty <= 256 ? 1 : 0;
+                        voice.makeEven = voice.pointqty <= 256 ? TRUE : FALSE;
                     }else
                     {
                         voice.tfreq    = frameLen*note*percSampleRate;
