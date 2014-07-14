@@ -20,7 +20,7 @@ package orgPlayer.struct
         
         public function Song() 
         {
-            tracks = Tools.pool1DVector(Track, 16, true);
+            tracks = Tools.malloc_1DVector(Track, 16, true);
         }
         
     }

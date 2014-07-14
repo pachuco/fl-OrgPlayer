@@ -13,7 +13,6 @@ package orgPlayer.struct
             active          :uint,
             makeEven        :uint, //m
             tfreq           :Number,
-            tpos            :Number,
             lvol            :Number = 0,
             rvol            :Number = 0,
             
@@ -22,6 +21,7 @@ package orgPlayer.struct
             
             clicksLeft      :int,
             
+            tpos            :Number,
             smpPosFrac      :uint; // TODO
         
         

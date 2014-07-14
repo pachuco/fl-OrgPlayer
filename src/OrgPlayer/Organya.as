@@ -62,7 +62,7 @@ package orgPlayer{
         public function Organya(resStream:ByteArray){ 
             melody      = new Vector.<ByteArray>;
             drums       = new Vector.<ByteArray>;
-            voices      = Tools.pool1DVector(Voice, 16, true);
+            voices      = Tools.malloc_1DVector(Voice, 16, true);
             
             resStream.position = 0;
             resStream.endian = Endian.BIG_ENDIAN;
@@ -82,13 +82,13 @@ package orgPlayer{
             
             //melody=new byte[mqty][mlen];
             //butt[outer][inner];
-            melody = Tools.pool1DVector(ByteArray, mqty, true);
+            melody = Tools.malloc_1DVector(ByteArray, mqty, true);
             
             var b:ByteArray;
             for each( b in melody){
                 if(mlen) resStream.readBytes(b, 0, mlen);
             }
-            drums = Tools.pool1DVector(ByteArray, resStream.readUnsignedByte(), true);
+            drums = Tools.malloc_1DVector(ByteArray, resStream.readUnsignedByte(), true);
             
             percSampleRate  = (resStream.readUnsignedByte()-1) << 8;
             percSampleRate += resStream.readUnsignedByte();
@@ -136,8 +136,6 @@ package orgPlayer{
                 track.trackSize  = orgStream.readUnsignedShort();
             }
             
-            
-            trace("kuk");
             //for each track
             for each (track in song.tracks)
             {
@@ -348,7 +346,7 @@ package orgPlayer{
                             samp1 = sign(drum[pos1++]);
                             samp2 = pos1 < drum.length ? sign(drum[pos1]) : 0;
                         }
-                        
+                        //if (j == 0) ass.input_clock(voice.tfreq);
                         //do interpolation
                         var samp:Number = (samp1+pos*(samp2-samp1));
                         
