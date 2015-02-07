@@ -77,7 +77,7 @@ package orgPlayer{
             for(i = 0; i < 3; i++)
             {
                 mlen <<= 8;
-                mlen += resStream.readUnsignedByte()
+                mlen += resStream.readUnsignedByte();
             }
             
             //melody=new byte[mqty][mlen];
@@ -90,8 +90,11 @@ package orgPlayer{
             }
             drums = Tools.malloc_1DVector(ByteArray, resStream.readUnsignedByte(), true);
             
-            percSampleRate  = (resStream.readUnsignedByte()-1) << 8;
-            percSampleRate += resStream.readUnsignedByte();
+            //percSampleRate  = (resStream.readUnsignedByte()) << 8;
+            //percSampleRate += resStream.readUnsignedByte();
+			resStream.readUnsignedByte();
+			resStream.readUnsignedByte();
+			percSampleRate = 1949;
             for(i = 0; i < drums.length; i++){
                 mlen = 0;
                 for(j = 0; j < 3; j++){
@@ -155,7 +158,7 @@ package orgPlayer{
                 var maxPos:uint = 0;
                 for each(var pos:int in positions) maxPos = (pos > maxPos && pos < Cons.arbitraryPosLimit) ? pos : maxPos;
                 maxPos = song.loopEnd > maxPos ? song.loopEnd : maxPos;
-                trace(maxPos);
+                
                 track.activity = new ByteArray();
                 track.note     = new ByteArray();
                 track.duration = new ByteArray();

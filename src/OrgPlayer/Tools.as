@@ -11,11 +11,6 @@ package orgPlayer
     public class Tools 
     {
         
-        public function Tools() 
-        {
-            
-        }
-        
         public static function getClassFromObject(obj:Object):Class
         {
             return Class(getDefinitionByName(getQualifiedClassName(obj)));
