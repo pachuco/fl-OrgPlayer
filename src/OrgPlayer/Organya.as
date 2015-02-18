@@ -17,6 +17,7 @@ package orgPlayer{
             
             melody          :Vector.<ByteArray>,
             drums           :Vector.<ByteArray>,
+		    drumlens        :Vector.<uint>, //maybe it will have some use, someday
             
             sample          :int=0,
             click           :uint=0,
@@ -69,41 +70,59 @@ package orgPlayer{
             //---------------------------------------------
             frameLen = 1.0/Cons.sampleRate;
             
-            //read sample data in from the resource file
-            var mqty:uint = resStream.readUnsignedByte();
-            var mlen:uint = 0;
+            var mqty:uint;
+			var dqty:uint;
+			var mlen:uint;
+            var dlen:uint;
             var i:uint, j:uint;
-            
-            for(i = 0; i < 3; i++)
-            {
-                mlen <<= 8;
-                mlen += resStream.readUnsignedByte();
+			
+			//read sample data in from the resource file
+			
+            //number of melody samples
+			mqty = resStream.readUnsignedByte();
+			//length of melody samples
+			mlen = 0;
+			mlen = (mlen << 8) + resStream.readUnsignedByte();
+			mlen = (mlen << 8) + resStream.readUnsignedByte();
+            //number of drums
+			dqty = resStream.readUnsignedByte();
+			
+			//drum sampling rate
+			percSampleRate = 0;
+			percSampleRate = (percSampleRate << 8) + resStream.readUnsignedByte();
+			percSampleRate = (percSampleRate << 8) + resStream.readUnsignedByte();
+			
+			//drum sample length table
+			drumlens = new Vector.<uint>(dqty, true);
+            for(i = 0; i < dqty; i++){
+				dlen = 0;
+				dlen = (dlen << 8) + resStream.readUnsignedByte();
+				dlen = (dlen << 8) + resStream.readUnsignedByte();
+				dlen = (dlen << 8) + resStream.readUnsignedByte();
+				dlen = (dlen << 8) + resStream.readUnsignedByte();
+				drumlens[i] = dlen;
             }
-            
-            //melody=new byte[mqty][mlen];
-            //butt[outer][inner];
+			
+			//melody waves
             melody = Tools.malloc_1DVector(ByteArray, mqty, true);
-            
             var b:ByteArray;
             for each( b in melody){
                 if(mlen) resStream.readBytes(b, 0, mlen);
             }
-            drums = Tools.malloc_1DVector(ByteArray, resStream.readUnsignedByte(), true);
-            
-            //percSampleRate  = (resStream.readUnsignedByte()) << 8;
-            //percSampleRate += resStream.readUnsignedByte();
-			resStream.readUnsignedByte();
-			resStream.readUnsignedByte();
-			percSampleRate = 1949;
-            for(i = 0; i < drums.length; i++){
-                mlen = 0;
-                for(j = 0; j < 3; j++){
-                    mlen <<= 8;
-                    mlen += resStream.readUnsignedByte();
-                }
-                if(mlen) resStream.readBytes(drums[i], 0, mlen);
+			
+			//drum waves
+            drums = Tools.malloc_1DVector(ByteArray, dqty, true);
+            for(i = 0; i < dqty; i++){
+				dlen = drumlens[i];
+                if (dlen) resStream.readBytes(drums[i], 0, dlen);
+				var drum:ByteArray = drums[i];
+				for (j = 0; j < dlen; j++ ) {
+					//convert to signed byte
+					drum[j] = drum[j] + 128; // & 0xFF
+				}
             }
-            //resStream.close();
+			
+            //go home
             resStream.position = 0;
         }
         
