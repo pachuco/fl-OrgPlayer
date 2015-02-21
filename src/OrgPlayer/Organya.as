@@ -85,7 +85,7 @@ package orgPlayer{
             //bank version
             resStream.readUnsignedByte();
             
-            //Organya song version this is bank intended for
+            //Organya song version this bank is intended for
             resStream.readMultiByte(2, "US-ASCII");
 			
             //number of melody samples
