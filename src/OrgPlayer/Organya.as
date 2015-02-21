@@ -17,11 +17,12 @@ package orgPlayer{
             
             melody          :Vector.<ByteArray>,
             drums           :Vector.<ByteArray>,
-		    drumlens        :Vector.<uint>, //maybe it will have some use, someday
+		    drumlens        :Vector.<uint>,
+            drumnames       :Vector.<String>,
+            percSampleRate  :uint,
             
             sample          :int=0,
             click           :uint=0,
-            percSampleRate  :uint,
             
             voices          :Vector.<Voice>;
             
@@ -77,6 +78,15 @@ package orgPlayer{
             var i:uint, j:uint;
 			
 			//read sample data in from the resource file
+            
+            //signature
+            if (resStream.readMultiByte(6, "US-ASCII") != "ORGDRM") return;
+            
+            //bank version
+            resStream.readUnsignedByte();
+            
+            //Organya song version this is bank intended for
+            resStream.readMultiByte(2, "US-ASCII");
 			
             //number of melody samples
 			mqty = resStream.readUnsignedByte();
@@ -102,6 +112,13 @@ package orgPlayer{
 				dlen = (dlen << 8) + resStream.readUnsignedByte();
 				drumlens[i] = dlen;
             }
+            
+            //drum sample names
+            drumnames = new Vector.<String>(dqty, true);
+            for (i = 0; i < dqty; i++) {
+                drumnames[i] = Tools.r_0TString(resStream, 22);
+            }
+            
 			
 			//melody waves
             melody = Tools.malloc_1DVector(ByteArray, mqty, true);
@@ -368,7 +385,7 @@ package orgPlayer{
                             samp1 = sign(drum[pos1++]);
                             samp2 = pos1 < drum.length ? sign(drum[pos1]) : 0;
                         }
-                        //if (j == 0) ass.input_clock(voice.tfreq);
+						
                         //do interpolation
                         var samp:Number = (samp1+pos*(samp2-samp1));
                         

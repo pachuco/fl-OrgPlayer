@@ -11,6 +11,35 @@ package orgPlayer
     public class Tools 
     {
         
+        public static function r_0TString(ba:ByteArray, max:int):String
+        {
+            var str:String;
+            var i:uint;
+            var pos:uint = ba.position;
+            var char:uint;
+            var isZero:Boolean = false;
+            
+            //check first where 0x00 occurs, if at all
+            for (i = 0; i < max; i++ )
+            {
+                char = ba.readUnsignedByte();
+                if (char == 0x00) break;
+            }
+            
+            //read actual string
+            ba.position = pos;
+            str = ba.readMultiByte(i+1, "US-ASCII");
+            
+            //discard the rest of the string if previous char was not 0x00
+            //walk untill either zero terminator is found or our legs break
+            while (char != 0x00)
+            {
+                char = ba.readUnsignedByte();
+            }
+            
+            return str;
+        }
+        
         public static function getClassFromObject(obj:Object):Class
         {
             return Class(getDefinitionByName(getQualifiedClassName(obj)));
