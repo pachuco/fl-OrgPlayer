@@ -80,7 +80,7 @@ package orgPlayer{
 			//read sample data in from the resource file
             
             //signature
-            if (resStream.readMultiByte(6, "US-ASCII") != "ORGDRM") return;
+            if (resStream.readMultiByte(6, "US-ASCII") != "ORGBNK") return;
             
             //bank version
             resStream.readUnsignedByte();
@@ -90,12 +90,13 @@ package orgPlayer{
 			
             //number of melody samples
 			mqty = resStream.readUnsignedByte();
+            //number of drums
+			dqty = resStream.readUnsignedByte();
+            
 			//length of melody samples
 			mlen = 0;
 			mlen = (mlen << 8) + resStream.readUnsignedByte();
 			mlen = (mlen << 8) + resStream.readUnsignedByte();
-            //number of drums
-			dqty = resStream.readUnsignedByte();
 			
 			//drum sampling rate
 			percSampleRate = 0;

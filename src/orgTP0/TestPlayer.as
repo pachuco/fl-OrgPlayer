@@ -30,7 +30,8 @@ package orgTP0 {
         //[Embed(source="mus/not comfortable to use.org", mimeType="application/octet-stream")]
         //private const org_data:Class;
         
-        [Embed(source="../res/orgsamp.dat", mimeType="application/octet-stream")]
+        //[Embed(source="../res/ORG134EN.DAT", mimeType="application/octet-stream")]
+        [Embed(source="../res/ORG210EN.DAT", mimeType="application/octet-stream")]
         private const smp_data:Class;
         
         
