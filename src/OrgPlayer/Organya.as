@@ -19,7 +19,6 @@ package orgPlayer{
             drums           :Vector.<ByteArray>,
             drumlens        :Vector.<uint>,
             drumnames       :Vector.<String>,
-            percSampleRate  :uint,
             
             sample          :int=0,
             click           :uint=0,
@@ -97,11 +96,6 @@ package orgPlayer{
             mlen = 0;
             mlen = (mlen << 8) + resStream.readUnsignedByte();
             mlen = (mlen << 8) + resStream.readUnsignedByte();
-            
-            //drum sampling rate
-            percSampleRate = 0;
-            percSampleRate = (percSampleRate << 8) + resStream.readUnsignedByte();
-            percSampleRate = (percSampleRate << 8) + resStream.readUnsignedByte();
             
             //drum sample length table
             drumlens = new Vector.<uint>(dqty, true);
@@ -462,7 +456,7 @@ package orgPlayer{
                         voice.makeEven = voice.pointqty <= 256 ? TRUE : FALSE;
                     }else
                     {
-                        voice.tfreq    = frameLen*note*percSampleRate;
+                        voice.tfreq    = frameLen*note*800;
                     }
                 }
             }
