@@ -17,7 +17,7 @@ package orgPlayer{
             
             melody          :Vector.<ByteArray>,
             drums           :Vector.<ByteArray>,
-		    drumlens        :Vector.<uint>,
+            drumlens        :Vector.<uint>,
             drumnames       :Vector.<String>,
             percSampleRate  :uint,
             
@@ -72,12 +72,12 @@ package orgPlayer{
             frameLen = 1.0/Cons.sampleRate;
             
             var mqty:uint;
-			var dqty:uint;
-			var mlen:uint;
+            var dqty:uint;
+            var mlen:uint;
             var dlen:uint;
             var i:uint, j:uint;
-			
-			//read sample data in from the resource file
+            
+            //read sample data in from the resource file
             
             //signature
             if (resStream.readMultiByte(6, "US-ASCII") != "ORGBNK") return;
@@ -87,31 +87,31 @@ package orgPlayer{
             
             //Organya song version this bank is intended for
             resStream.readUnsignedByte();
-			
-            //number of melody samples
-			mqty = resStream.readUnsignedByte();
-            //number of drums
-			dqty = resStream.readUnsignedByte();
             
-			//length of melody samples
-			mlen = 0;
-			mlen = (mlen << 8) + resStream.readUnsignedByte();
-			mlen = (mlen << 8) + resStream.readUnsignedByte();
-			
-			//drum sampling rate
-			percSampleRate = 0;
-			percSampleRate = (percSampleRate << 8) + resStream.readUnsignedByte();
-			percSampleRate = (percSampleRate << 8) + resStream.readUnsignedByte();
-			
-			//drum sample length table
-			drumlens = new Vector.<uint>(dqty, true);
+            //number of melody samples
+            mqty = resStream.readUnsignedByte();
+            //number of drums
+            dqty = resStream.readUnsignedByte();
+            
+            //length of melody samples
+            mlen = 0;
+            mlen = (mlen << 8) + resStream.readUnsignedByte();
+            mlen = (mlen << 8) + resStream.readUnsignedByte();
+            
+            //drum sampling rate
+            percSampleRate = 0;
+            percSampleRate = (percSampleRate << 8) + resStream.readUnsignedByte();
+            percSampleRate = (percSampleRate << 8) + resStream.readUnsignedByte();
+            
+            //drum sample length table
+            drumlens = new Vector.<uint>(dqty, true);
             for(i = 0; i < dqty; i++){
-				dlen = 0;
-				dlen = (dlen << 8) + resStream.readUnsignedByte();
-				dlen = (dlen << 8) + resStream.readUnsignedByte();
-				dlen = (dlen << 8) + resStream.readUnsignedByte();
-				dlen = (dlen << 8) + resStream.readUnsignedByte();
-				drumlens[i] = dlen;
+                dlen = 0;
+                dlen = (dlen << 8) + resStream.readUnsignedByte();
+                dlen = (dlen << 8) + resStream.readUnsignedByte();
+                dlen = (dlen << 8) + resStream.readUnsignedByte();
+                dlen = (dlen << 8) + resStream.readUnsignedByte();
+                drumlens[i] = dlen;
             }
             
             //drum sample names
@@ -120,26 +120,26 @@ package orgPlayer{
                 drumnames[i] = Tools.r_0TString(resStream, 22);
             }
             
-			
-			//melody waves
+            
+            //melody waves
             melody = Tools.malloc_1DVector(ByteArray, mqty, true);
             var b:ByteArray;
             for each( b in melody){
                 if(mlen) resStream.readBytes(b, 0, mlen);
             }
-			
-			//drum waves
+            
+            //drum waves
             drums = Tools.malloc_1DVector(ByteArray, dqty, true);
             for(i = 0; i < dqty; i++){
-				dlen = drumlens[i];
+                dlen = drumlens[i];
                 if (dlen) resStream.readBytes(drums[i], 0, dlen);
-				var drum:ByteArray = drums[i];
-				for (j = 0; j < dlen; j++ ) {
-					//convert to signed byte
-					drum[j] = drum[j] + 128; // & 0xFF
-				}
+                var drum:ByteArray = drums[i];
+                for (j = 0; j < dlen; j++ ) {
+                    //convert to signed byte
+                    drum[j] = drum[j] + 128; // & 0xFF
+                }
             }
-			
+            
             //go home
             resStream.position = 0;
         }
@@ -386,7 +386,7 @@ package orgPlayer{
                             samp1 = sign(drum[pos1++]);
                             samp2 = pos1 < drum.length ? sign(drum[pos1]) : 0;
                         }
-						
+                        
                         //do interpolation
                         var samp:Number = (samp1+pos*(samp2-samp1));
                         
