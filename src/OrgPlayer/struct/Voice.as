@@ -11,7 +11,7 @@ package orgPlayer.struct
             periodsLeft     :uint,    //m
             pointqty        :uint,    //m
             active          :uint,
-            makeEven        :uint, //m
+            makeEven        :uint,    //m
             tfreq           :Number,
             lvol            :Number = 0,
             rvol            :Number = 0,
@@ -21,13 +21,11 @@ package orgPlayer.struct
             
             clicksLeft      :int,
             
-            tpos            :Number,
-            smpPosFrac      :uint; // TODO
+            tpos            :Number;
         
         
         public function Voice() 
         {
-            
         }
         
     }

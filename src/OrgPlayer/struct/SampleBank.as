@@ -9,50 +9,33 @@ package orgPlayer.struct
     {
         //Bank format structure
         //Everything is big endian unless stated otherwise
-        
         //--------------------------------------------------------
-        //header sig
-        //6 bytes
+        //header sig                                            6 bytes
         public static const SIG:String = "ORGBNK";
-        
         public var
-        //bank version
-        //1 byte
+        //bank version                                          1 byte
         verbank         :uint,
-        
-        //song version bank is made for
-        //1 byte
+        //song version bank is made for                         1 byte
         verorg          :uint,
-        
-        //number of melody samples
-        //1 byte
+        //number of melody samples                              1 byte
         snumMelo        :uint,
-        
-        //number of drum samples
-        //1 byte
+        //number of drum samples                                1 byte
         snumDrum        :uint,
-        
-        //length of one melody sample
-        //2 bytes
+        //length of one melody sample                           2 bytes
         lenMelo         :uint,
-        
-        //table of drum sample lengths
-        //4 bytes * snumDrum
+        //table of drum sample lengths                          4 bytes * snumDrum
         tblLenDrum      :Vector.<uint>,
-        
-        //table of 0-terminated drum sample name strings
-        //x bytes * snumDrum
-        //x <= 22
+        //table of 0-terminated drum sample name strings        x bytes * snumDrum; x <= 22
         tblNameDrum     :Vector.<String>,
-        
-        //melody samples
-        //snumMelo * lenMelo bytes
+        //melody samples                                        snumMelo * lenMelo bytes
         melody          :Vector.<ByteArray>,
-        
-        //drum samples
-        //snumDrum * tblLenDrum[i] bytes
+        //drum samples                                          snumDrum * tblLenDrum[i] bytes
         drums           :Vector.<ByteArray>;
         //--------------------------------------------------------
+        
+        //not in file structure
+        //drum offsets
+        public var tblOffDrum:Vector.<uint>;
         
         public function SampleBank(resStream:ByteArray) 
         {
@@ -87,8 +70,9 @@ package orgPlayer.struct
             lenMelo = (lenMelo << 8) + resStream.readUnsignedByte();
             lenMelo = (lenMelo << 8) + resStream.readUnsignedByte();
             
-            //drum sample length table
+            //drum sample length and offset tables
             tblLenDrum = new Vector.<uint>(snumDrum, true);
+            tblOffDrum = new Vector.<uint>(snumDrum, true);
             for(i = 0; i < snumDrum; i++){
                 dlen = 0;
                 dlen = (dlen << 8) + resStream.readUnsignedByte();
@@ -96,6 +80,8 @@ package orgPlayer.struct
                 dlen = (dlen << 8) + resStream.readUnsignedByte();
                 dlen = (dlen << 8) + resStream.readUnsignedByte();
                 tblLenDrum[i] = dlen;
+                //offsets
+                tblOffDrum[i] = i ? tblOffDrum[i-1] + dlen : 0;
             }
             
             //drum sample names
