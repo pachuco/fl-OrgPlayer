@@ -12,7 +12,7 @@ package orgPlayer.struct
             pointqty        :uint,    //m
             active          :uint,
             makeEven        :uint,    //m
-            tfreq           :Number,
+            tfreq           :Number = 0,
             lvol            :Number = 0,
             rvol            :Number = 0,
             
@@ -21,7 +21,7 @@ package orgPlayer.struct
             
             clicksLeft      :int,
             
-            tpos            :Number;
+            tpos            :Number = 0;
         
         
         public function Voice() 

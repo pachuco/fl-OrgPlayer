@@ -177,30 +177,37 @@ package orgPlayer{
                         var ins:int = track.instrument;
                         var samp1:int, samp2:int, pos:Number;
                         var pos1:int, pos2:int
+                        var off:uint, len:uint;
                         
                         pos = voice.tpos;
-                        if(j < 8){
+                        if (j < 8) {
+                            len  = sb.lenMelo;
+                            off  = ins * len;
+                            
                             var size:int = voice.pointqty;
                             pos *= size;
                             pos1 = uint(pos);
                             pos -= pos1;
                             pos2 = pos1+1;
-                            if(pos2 == size) pos2 = 0;
-                            //I dunno what this does, but it's working.
+                            if (pos2 == size) pos2 = 0;
+                            
+                            //This is a strange measure to reduce aliasing in high notes
                             if(voice.makeEven)
                             {
                                 pos1 -= pos1%2;
                                 pos2 -= pos2%2;
                             }
                             
-                            samp1 = sign(sb.melody[ins][uint((pos1*256)/size)]);
-                            samp2 = sign(sb.melody[ins][uint((pos2*256)/size)]);
-                        }else{
+                            samp1 = sb.melody[off + uint((pos1*256)/size)];
+                            samp2 = sb.melody[off + uint((pos2*256)/size)];
+                        }else {
+                            len   = sb.tblLenDrum[ins];
+                            off   = sb.tblOffDrum[ins];
+                            
                             pos1  = uint(pos);
                             pos  -= pos1;
-                            var drum:ByteArray = sb.drums[ins];
-                            samp1 = sign(drum[pos1++]);
-                            samp2 = pos1 < drum.length ? sign(drum[pos1]) : 0;
+                            samp1 = sb.drums[off + pos1++];
+                            samp2 = pos1 < len ? sb.drums[off + pos1] : 0;
                         }
                         
                         //do interpolation
@@ -215,7 +222,8 @@ package orgPlayer{
                             voice.tpos--;
                             if(track.pi) if(--voice.periodsLeft == 0) voice.active = FALSE;
                         }
-                        if(j >= 8) if(voice.tpos >= sb.drums[ins].length) voice.active = FALSE;
+                        //stop if sample ended
+                        if(j >= 8) if(voice.tpos >= sb.tblLenDrum[ins]) voice.active = FALSE;
                     }
                 }
                 outBuf.writeFloat(rsamp/0xFFFF);
@@ -267,6 +275,8 @@ package orgPlayer{
                     voice.active  = TRUE;
                     voice.tpos    = 0.0;
                     
+                    //multiply our detune by 2x every octave
+                    //this is due to fact that the music engine recycles frequencies and doubles/halves sample per octave
                     var foff:Number   = (track.freq-1000)/256;
                     for(j = 24; j <= note; j+=12) if(j != 36) foff *= 2;
                     

@@ -28,26 +28,26 @@ package orgPlayer.struct
         //table of 0-terminated drum sample name strings        x bytes * snumDrum; x <= 22
         tblNameDrum     :Vector.<String>,
         //melody samples                                        snumMelo * lenMelo bytes
-        melody          :Vector.<ByteArray>,
+        melody          :Vector.<int>,
         //drum samples                                          snumDrum * tblLenDrum[i] bytes
-        drums           :Vector.<ByteArray>;
+        drums           :Vector.<int>;
         //--------------------------------------------------------
         
         //not in file structure
         //drum offsets
         public var tblOffDrum:Vector.<uint>;
+        //length of all drum samples together
+        public var lenAllDrm:uint;
         
         public function SampleBank(resStream:ByteArray) 
         {
-            melody      = new Vector.<ByteArray>;
-            drums       = new Vector.<ByteArray>;
-            
             resStream.position = 0;
             resStream.endian = Endian.BIG_ENDIAN;
             //---------------------------------------------
             
             var dlen:uint;
             var i:uint, j:uint;
+            var b:ByteArray, x:int;
             
             //read sample data in from the resource file
             
@@ -73,6 +73,7 @@ package orgPlayer.struct
             //drum sample length and offset tables
             tblLenDrum = new Vector.<uint>(snumDrum, true);
             tblOffDrum = new Vector.<uint>(snumDrum, true);
+            lenAllDrm = 0;
             for(i = 0; i < snumDrum; i++){
                 dlen = 0;
                 dlen = (dlen << 8) + resStream.readUnsignedByte();
@@ -80,8 +81,9 @@ package orgPlayer.struct
                 dlen = (dlen << 8) + resStream.readUnsignedByte();
                 dlen = (dlen << 8) + resStream.readUnsignedByte();
                 tblLenDrum[i] = dlen;
+                lenAllDrm += dlen;
                 //offsets
-                tblOffDrum[i] = i ? tblOffDrum[i-1] + dlen : 0;
+                tblOffDrum[i] = i ? tblOffDrum[i - 1] + dlen : 0;
             }
             
             //drum sample names
@@ -92,24 +94,24 @@ package orgPlayer.struct
             
             
             //melody waves
-            melody = Tools.malloc_1DVector(ByteArray, snumMelo, true);
-            var b:ByteArray;
-            for each( b in melody){
-                if(lenMelo) resStream.readBytes(b, 0, lenMelo);
+            melody = new Vector.<int>(snumMelo * lenMelo);
+            b = new ByteArray();
+            resStream.readBytes(b, 0, snumMelo * lenMelo);
+            for (i = 0; i < snumMelo * lenMelo; i++) {
+                x = b[i];
+                if(x >= 128) x -= 256
+                melody[i] = x;
             }
             
             //drum waves
-            drums = Tools.malloc_1DVector(ByteArray, snumDrum, true);
-            for(i = 0; i < snumDrum; i++){
-                dlen = tblLenDrum[i];
-                if (dlen) resStream.readBytes(drums[i], 0, dlen);
-                var drum:ByteArray = drums[i];
-                for (j = 0; j < dlen; j++ ) {
-                    //convert to signed byte
-                    drum[j] = drum[j] + 128; // & 0xFF
-                }
+            drums = new Vector.<int>(lenAllDrm);
+            b = new ByteArray();
+            resStream.readBytes(b, 0, lenAllDrm);
+            for (i = 0; i < lenAllDrm; i++) {
+                x = b[i];
+                x = x - 128;
+                drums[i] = x;
             }
-            
             //go home
             resStream.position = 0;
         }
