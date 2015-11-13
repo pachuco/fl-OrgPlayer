@@ -53,6 +53,8 @@ package orgPlayer{
                 voices[i].tpos        = 0.0;
                 voices[i].lvol        = 0.0;
                 voices[i].rvol        = 0.0;
+                voices[i].vol         = 0.0;
+                voices[i].pan         = 0.0;
             }
         }
         

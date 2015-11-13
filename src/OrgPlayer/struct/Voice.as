@@ -17,7 +17,7 @@ package orgPlayer.struct
             rvol            :Number = 0,
             
             vol             :Number = 0,
-            pan             :Number = 6,
+            pan             :Number = 0,
             
             clicksLeft      :int,
             
