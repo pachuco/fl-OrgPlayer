@@ -47,7 +47,7 @@ package orgPlayer.struct
             
             var dlen:uint;
             var i:uint, j:uint;
-            var b:ByteArray, x:int;
+            var b:ByteArray, x:int, off:uint;
             
             //read sample data in from the resource file
             
@@ -74,6 +74,7 @@ package orgPlayer.struct
             tblLenDrum = new Vector.<uint>(snumDrum, true);
             tblOffDrum = new Vector.<uint>(snumDrum, true);
             lenAllDrm = 0;
+            off = 0;
             for(i = 0; i < snumDrum; i++){
                 dlen = 0;
                 dlen = (dlen << 8) + resStream.readUnsignedByte();
@@ -83,7 +84,8 @@ package orgPlayer.struct
                 tblLenDrum[i] = dlen;
                 lenAllDrm += dlen;
                 //offsets
-                tblOffDrum[i] = i ? tblOffDrum[i - 1] + dlen : 0;
+                tblOffDrum[i] = off;
+                off += dlen;
             }
             
             //drum sample names

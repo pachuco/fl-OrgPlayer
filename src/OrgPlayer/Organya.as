@@ -276,7 +276,7 @@ package orgPlayer{
                     voice.tpos    = 0.0;
                     
                     //multiply our detune by 2x every octave
-                    //this is due to fact that the music engine recycles frequencies and doubles/halves sample per octave
+                    //we compensate because the original engine recycles frequencies and doubles/halves sample per octave
                     var foff:Number   = (track.freq-1000)/256;
                     for(j = 24; j <= note; j+=12) if(j != 36) foff *= 2;
                     
