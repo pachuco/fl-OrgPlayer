@@ -11,7 +11,7 @@ package orgPlayer.struct
         //Everything is big endian unless stated otherwise
         //--------------------------------------------------------
         //header sig                                            6 bytes
-        public static const SIG:String = "ORGBNK";
+        public static const MAGIC:String = "ORGBNK";
         public var
         //bank version                                          1 byte
         verbank         :uint,
@@ -52,11 +52,10 @@ package orgPlayer.struct
             //read sample data in from the resource file
             
             //signature
-            if (resStream.readMultiByte(6, "US-ASCII") != SIG) return;
+            if (resStream.readMultiByte(6, "US-ASCII") != MAGIC) return;
             
             //bank version
             verbank = resStream.readUnsignedByte();
-            
             //Organya song version this bank is intended for
             verorg  = resStream.readUnsignedByte();
             
